@@ -1,0 +1,30 @@
+micronaut:
+  application:
+    name: personalAssistantBot
+    default-charset: UTF-8
+  server:
+    port: 8383
+datasources:
+  default:
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:bot_db}?createDatabaseIfNotExist=true
+    driverClassName: org.postgresql.Driver
+    username: ${PGUSER:postgres}
+    password: ${PGPASSWORD:postgres}
+    schema-generate: CREATE_DROP
+    dialect: POSTGRES
+jpa:
+  default:
+    packages-to-scan:
+      - 'com.malerx'
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+        show_sql: true
+netty:
+  default:
+    allocator:
+      max-order: 3
+telegram:
+  token: 5667042661:AAHCILa--i8OC_wV6zXwFl_qxj5-kF8NAx0
+  username: personalAssistangGalo_bot

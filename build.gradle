@@ -1,0 +1,53 @@
+plugins {
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("io.micronaut.application") version "3.6.0"
+    id("io.micronaut.test-resources") version "3.6.0"
+}
+
+version = "0.1"
+group = "com.malerx"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor("org.projectlombok:lombok")
+    annotationProcessor("io.micronaut.data:micronaut-data-processor")
+    annotationProcessor("io.micronaut:micronaut-http-validation")
+    implementation("io.micronaut:micronaut-http-client")
+    implementation("io.micronaut:micronaut-jackson-databind")
+    implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
+    implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+    implementation("jakarta.annotation:jakarta.annotation-api")
+    compileOnly("org.projectlombok:lombok")
+    runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("org.slf4j:slf4j-simple")
+    implementation("io.micronaut:micronaut-validation")
+
+    // https://mvnrepository.com/artifact/org.telegram/telegrambots
+    implementation group: 'org.telegram', name: 'telegrambots', version: '6.1.0'
+
+}
+
+
+application {
+    mainClass.set("com.malerx.Application")
+}
+java {
+    sourceCompatibility = JavaVersion.toVersion("11")
+    targetCompatibility = JavaVersion.toVersion("11")
+}
+
+graalvmNative.toolchainDetection = false
+micronaut {
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("com.malerx.*")
+    }
+}
+
+
+
