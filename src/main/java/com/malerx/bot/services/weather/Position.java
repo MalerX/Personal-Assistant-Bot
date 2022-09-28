@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Singleton;
@@ -29,6 +30,10 @@ class Position {
             Map<String, Object> level1 = ((Map<String, Object>) response.get("response"));
             Map<String, Object> level2 = ((Map<String, Object>) level1.get("GeoObjectCollection"));
             Collection<Object> level3 = ((Collection) level2.get("featureMember"));
+            if (CollectionUtils.isEmpty(level3)) {
+                log.error("extract() -> not found pos");
+                return Optional.empty();
+            }
             Map<String, Object> level4 = ((Map<String, Object>) level3.iterator().next());
             Map<String, Object> level5 = ((Map<String, Object>) level4.get("GeoObject"));
             Map<String, Object> point = ((Map<String, Object>) level5.get("Point"));

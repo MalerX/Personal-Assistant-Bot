@@ -48,6 +48,7 @@ public class WeatherService {
                                                 update.getMessage().getChatId().toString(), jsonWeather
                                         )));
                     }
+                    log.error("getCoordinates() -> failed get position for {}", destination[1]);
                     return CompletableFuture.completedFuture(Optional.empty());
                 });
     }
@@ -65,11 +66,7 @@ public class WeatherService {
                 .thenApply(httpResponse -> {
                     log.debug("getCoordinates() -> receive response with pos");
                     if (StringUtils.isNotEmpty(httpResponse.body())) {
-                        Optional<Coordinates> geo = position.extract(httpResponse.body());
-                        if (geo.isPresent()) {
-                            return geo;
-                        }
-                        log.error("getCoordinates() -> failed get position for {}", destination);
+                        return position.extract(httpResponse.body());
                     } else {
                         log.error("getCoordinates() -> response body is empty");
                     }
