@@ -7,19 +7,19 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 @Factory
 public class QueueFactory {
-    private final ArrayBlockingQueue<Object> response;
-    private final ArrayBlockingQueue<Update> request;
+    private final ArrayBlockingQueue<Object> responses;
+    private final ArrayBlockingQueue<Update> requests;
 
     public QueueFactory() {
-        this.request = new ArrayBlockingQueue<>(1000);
-        this.response = new ArrayBlockingQueue<>(1000);
+        this.requests = new ArrayBlockingQueue<>(1000);
+        this.responses = new ArrayBlockingQueue<>(1000);
     }
 
-    public ArrayBlockingQueue<Object> getResponse() {
-        return response;
+    public ArrayBlockingQueue<Object> getResponses() {
+        return responses;
     }
 
-    public ArrayBlockingQueue<Update> getRequest() {
-        return request;
+    public ArrayBlockingQueue<Update> getRequests() {
+        return requests;
     }
 }

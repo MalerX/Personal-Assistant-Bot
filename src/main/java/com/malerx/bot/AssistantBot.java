@@ -20,20 +20,20 @@ public class AssistantBot extends TelegramLongPollingBot {
     @Value(value = "${telegram.username}")
     private String username;
 
-    private final ArrayBlockingQueue<Update> request;
-    private final ArrayBlockingQueue<Object> response;
+    private final ArrayBlockingQueue<Update> requests;
+    private final ArrayBlockingQueue<Object> responses;
 
     public AssistantBot(QueueFactory queueFactory) {
-        this.request = queueFactory.getRequest();
-        this.response = queueFactory.getResponse();
+        this.requests = queueFactory.getRequests();
+        this.responses = queueFactory.getResponses();
     }
 
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
-            log.debug("onUpdateReceived() -> receive request from: {}", update.getMessage().getFrom());
+            log.debug("onUpdateReceived() -> receive requests from: {}", update.getMessage().getFrom());
             try {
-                request.put(update);
+                requests.put(update);
             } catch (InterruptedException e) {
                 log.info("onUpdateReceived() -> adding interrupted", e);
             }
@@ -48,8 +48,8 @@ public class AssistantBot extends TelegramLongPollingBot {
             log.debug("send() -> start polling queue...");
             while (true) {
                 try {
-                    Object object = response.take();
-                    log.debug("send() -> get response {}", object);
+                    Object object = responses.take();
+                    log.debug("send() -> get responses {}", object);
                     if (object instanceof SendMessage) {
                         SendMessage message = ((SendMessage) object);
                         execute(message);

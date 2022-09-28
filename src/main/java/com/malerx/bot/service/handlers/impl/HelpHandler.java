@@ -11,21 +11,19 @@ import java.util.concurrent.CompletableFuture;
 
 @Singleton
 @Slf4j
-public class EchoHandler implements UpdateHandler {
+public class HelpHandler implements UpdateHandler {
     @Override
     public CompletableFuture<Optional<Object>> handle(Update update) {
-        log.debug("handle() -> handle message {}", update.getMessage());
-        return CompletableFuture.supplyAsync(() -> {
-            SendMessage message = new SendMessage(
-                    update.getMessage().getChatId().toString(),
-                    "Echo: ".concat(update.getMessage().getText().substring(3).trim())
-            );
-            return Optional.of(message);
-        });
+        return CompletableFuture.supplyAsync(() -> Optional.of(
+                new SendMessage(
+                        update.getMessage().getChatId().toString(),
+                        "Тестовый бот, функционал находится в стадии разработки."
+                )
+        ));
     }
 
     @Override
     public Boolean support(Update update) {
-        return update.getMessage().getText().startsWith("!e ");
+        return update.getMessage().getText().startsWith("/help");
     }
 }

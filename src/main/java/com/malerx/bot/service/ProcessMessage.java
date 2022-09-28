@@ -19,8 +19,8 @@ public class ProcessMessage {
 
     public ProcessMessage(QueueFactory factory,
                           HandlerManager handlerManager) {
-        this.requests = factory.getRequest();
-        this.responses = factory.getResponse();
+        this.requests = factory.getRequests();
+        this.responses = factory.getResponses();
         this.handlerManager = handlerManager;
     }
 
