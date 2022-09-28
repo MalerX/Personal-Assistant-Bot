@@ -43,9 +43,10 @@ public class WeatherService {
                 .thenCompose(coordinates -> {
                     if (coordinates.isPresent()) {
                         return getWeather(coordinates.get())
-                                .thenApply(jsonWeatherOpt -> jsonWeatherOpt.map(jsoWeather -> new SendMessage(
-                                        update.getMessage().getChatId().toString(), jsoWeather
-                                )));
+                                .thenApply(jsonOptional -> jsonOptional
+                                        .map(jsonWeather -> new SendMessage(
+                                                update.getMessage().getChatId().toString(), jsonWeather
+                                        )));
                     }
                     return CompletableFuture.completedFuture(Optional.empty());
                 });
