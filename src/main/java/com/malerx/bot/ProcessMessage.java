@@ -1,24 +1,23 @@
-package com.malerx.bot.service;
+package com.malerx.bot;
 
-import com.malerx.bot.factory.QueueFactory;
-import com.malerx.bot.service.handlers.HandlerManager;
+import com.malerx.bot.factory.BeanFactory;
+import com.malerx.bot.handlers.HandlerManager;
 import io.micronaut.context.annotation.Context;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Singleton;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
-@Singleton
+@Context
 @Slf4j
 public class ProcessMessage {
     private final ArrayBlockingQueue<Update> requests;
     private final ArrayBlockingQueue<Object> responses;
     private final HandlerManager handlerManager;
 
-    public ProcessMessage(QueueFactory factory,
+    public ProcessMessage(BeanFactory factory,
                           HandlerManager handlerManager) {
         this.requests = factory.getRequests();
         this.responses = factory.getResponses();

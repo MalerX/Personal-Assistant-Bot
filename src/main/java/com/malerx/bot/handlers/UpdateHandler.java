@@ -1,9 +1,8 @@
-package com.malerx.bot.service.handlers;
+package com.malerx.bot.handlers;
 
 import io.micronaut.core.annotation.NonNull;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import javax.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -17,7 +16,7 @@ public interface UpdateHandler {
      * @param update Объект события.
      * @return Ответ, созданный по результатам обработки события
      */
-    CompletableFuture<Optional<Object>> handle(@NotNull Update update);
+    CompletableFuture<Optional<Object>> handle(@NonNull Update update);
 
     Boolean support(@NonNull Update update);
 }

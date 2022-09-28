@@ -1,7 +1,6 @@
 package com.malerx.bot;
 
-import com.malerx.bot.factory.QueueFactory;
-import io.micronaut.context.annotation.Context;
+import com.malerx.bot.factory.BeanFactory;
 import io.micronaut.context.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -24,9 +23,9 @@ public class AssistantBot extends TelegramLongPollingBot {
     private final ArrayBlockingQueue<Update> requests;
     private final ArrayBlockingQueue<Object> responses;
 
-    public AssistantBot(QueueFactory queueFactory) {
-        this.requests = queueFactory.getRequests();
-        this.responses = queueFactory.getResponses();
+    public AssistantBot(BeanFactory beanFactory) {
+        this.requests = beanFactory.getRequests();
+        this.responses = beanFactory.getResponses();
     }
 
     @Override

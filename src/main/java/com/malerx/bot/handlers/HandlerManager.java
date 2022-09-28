@@ -1,4 +1,4 @@
-package com.malerx.bot.service.handlers;
+package com.malerx.bot.handlers;
 
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
