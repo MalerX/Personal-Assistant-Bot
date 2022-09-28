@@ -1,6 +1,5 @@
 package com.malerx.bot.services.weather;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.util.StringUtils;
@@ -42,28 +41,11 @@ public class WeatherService {
         log.debug("handle() -> incoming request weather");
         String[] destination = update.getMessage().getText().split("\\s", 2);
         return getCoordinates(destination[1])
-                .thenCompose(coordinates -> {
-                    if (Objects.isNull(coordinates)) {
-                        return CompletableFuture.completedFuture(Optional.empty());
-                    }
-                    String geo = String.format("?lat=%s&lon=%s",
-                            coordinates.getLatitude(), coordinates.getLongitude());
-                    HttpRequest request = HttpRequest.newBuilder()
-                            .GET()
-                            .uri(URI.create(urlWeather.concat(geo)))
-                            .header("X-Yandex-API-Key", weatherToken)
-                            .build();
-                    return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                            .thenApply(httpResponse -> {
-                                log.debug("handle() -> receive response from {}: {}",
-                                        request.uri(), httpResponse.body());
-                                SendMessage message = new SendMessage(
-                                        update.getMessage().getChatId().toString(),
-                                        httpResponse.body()
-                                );
-                                return Optional.of(message);
-                            });
-                });
+                .thenCompose(coordinates -> getWeather(coordinates)
+                        .thenApply(jsonWeatherOpt -> jsonWeatherOpt.map(jsoWeather -> new SendMessage(
+                                        update.getMessage().getChatId().toString(), jsoWeather
+                                ))
+                        ));
     }
 
     private CompletableFuture<Coordinates> getCoordinates(String destination) {
@@ -89,6 +71,21 @@ public class WeatherService {
                     }
                     return null;
                 });
+    }
+
+    private CompletableFuture<Optional<String>> getWeather(Coordinates coordinates) {
+        if (Objects.isNull(coordinates)) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+        String geo = String.format("?lat=%s&lon=%s",
+                coordinates.getLatitude(), coordinates.getLongitude());
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(urlWeather.concat(geo)))
+                .header("X-Yandex-API-Key", weatherToken)
+                .build();
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(httpResponse -> Optional.ofNullable(httpResponse.body()));
     }
 
     @Getter
