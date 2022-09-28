@@ -26,5 +26,8 @@ netty:
     allocator:
       max-order: 3
 telegram:
-  token: 5667042661:AAHCILa--i8OC_wV6zXwFl_qxj5-kF8NAx0
+  token: ${BOT_TOKEN}
   username: personalAssistangGalo_bot
+api:
+  yandex:
+    weather: ${WEATHER_TOKEN}
