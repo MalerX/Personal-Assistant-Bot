@@ -3,8 +3,6 @@ package com.malerx.bot.services.weather;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.util.StringUtils;
-import lombok.Builder;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -42,14 +40,18 @@ public class WeatherService {
         log.debug("handle() -> incoming request weather");
         String[] destination = update.getMessage().getText().split("\\s", 2);
         return getCoordinates(destination[1])
-                .thenCompose(coordinates -> getWeather(coordinates)
-                        .thenApply(jsonWeatherOpt -> jsonWeatherOpt.map(jsoWeather -> new SendMessage(
+                .thenCompose(coordinates -> {
+                    if (coordinates.isPresent()) {
+                        return getWeather(coordinates.get())
+                                .thenApply(jsonWeatherOpt -> jsonWeatherOpt.map(jsoWeather -> new SendMessage(
                                         update.getMessage().getChatId().toString(), jsoWeather
-                                ))
-                        ));
+                                )));
+                    }
+                    return CompletableFuture.completedFuture(Optional.empty());
+                });
     }
 
-    private CompletableFuture<Coordinates> getCoordinates(String destination) {
+    private CompletableFuture<Optional<Coordinates>> getCoordinates(String destination) {
         log.debug("getCoordinates() -> send request pos for {}", destination);
         String uriStr = urlGeo.concat(
                 String.format("?format=json&apikey=%s&geocode=%s",
@@ -64,13 +66,13 @@ public class WeatherService {
                     if (StringUtils.isNotEmpty(httpResponse.body())) {
                         Optional<Coordinates> geo = position.extract(httpResponse.body());
                         if (geo.isPresent()) {
-                            return geo.get();
+                            return geo;
                         }
                         log.error("getCoordinates() -> failed get position for {}", destination);
                     } else {
                         log.error("getCoordinates() -> response body is empty");
                     }
-                    return null;
+                    return Optional.empty();
                 });
     }
 
