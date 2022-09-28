@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class WeatherHandler implements UpdateHandler {
+    private static final String COMMAND = "/погода ";
     @Value(value = "${api.yandex.weather}")
     private String weatherToken;
     private final HttpClient client;
@@ -48,6 +49,6 @@ public class WeatherHandler implements UpdateHandler {
 
     @Override
     public Boolean support(Update update) {
-        return update.getMessage().getText().startsWith("!п ");
+        return update.getMessage().getText().startsWith(COMMAND);
     }
 }

@@ -12,6 +12,8 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class EchoHandler implements UpdateHandler {
+    private static final String COMMAND = "!e ";
+
     @Override
     public CompletableFuture<Optional<Object>> handle(Update update) {
         log.debug("handle() -> handle message {}", update.getMessage());
@@ -24,6 +26,6 @@ public class EchoHandler implements UpdateHandler {
 
     @Override
     public Boolean support(Update update) {
-        return update.getMessage().getText().startsWith("!e ");
+        return update.getMessage().getText().startsWith(COMMAND);
     }
 }

@@ -9,10 +9,11 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Singleton;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
-@Context
+@Singleton
 @Slf4j
 public class AssistantBot extends TelegramLongPollingBot {
     @Value(value = "${telegram.token}")

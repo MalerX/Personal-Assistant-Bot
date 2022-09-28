@@ -12,6 +12,8 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class HelpHandler implements UpdateHandler {
+    private static final String COMMAND = "/help";
+
     @Override
     public CompletableFuture<Optional<Object>> handle(Update update) {
         return CompletableFuture.supplyAsync(() -> Optional.of(
@@ -23,6 +25,6 @@ public class HelpHandler implements UpdateHandler {
 
     @Override
     public Boolean support(Update update) {
-        return update.getMessage().getText().startsWith("/help");
+        return update.getMessage().getText().startsWith(COMMAND);
     }
 }

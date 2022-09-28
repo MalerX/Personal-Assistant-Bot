@@ -4,8 +4,9 @@ plugins {
     id("io.micronaut.test-resources") version "3.6.0"
 }
 
-version = "0.1"
-group = "com.malerx"
+
+group = groupId
+version = groupVersion
 
 repositories {
     mavenCentral()
