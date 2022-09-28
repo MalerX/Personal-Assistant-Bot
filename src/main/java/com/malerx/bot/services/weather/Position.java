@@ -21,8 +21,8 @@ class Position {
         this.mapper = mapper;
     }
 
-    public Optional<WeatherService.Coordinates> extract(@NonNull String json) {
-        WeatherService.Coordinates result = null;
+    public Optional<Coordinates> extract(@NonNull String json) {
+        Coordinates result = null;
         try {
             Map<String, Object> response = mapper.readValue(json, new TypeReference<Map<String, Object>>() {
             });
@@ -34,7 +34,7 @@ class Position {
             Map<String, Object> point = ((Map<String, Object>) level5.get("Point"));
             String[] pos = point.get("pos").toString().split("\\s");
             log.debug("extract() -> extract pos from body response: {}", Arrays.toString(pos));
-            result = WeatherService.Coordinates.builder()
+            result = Coordinates.builder()
                     .longitude(pos[0])
                     .latitude(pos[1])
                     .build();

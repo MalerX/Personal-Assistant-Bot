@@ -29,8 +29,9 @@ public class WeatherService {
     private String geoToken;
     @Value(value = "${api.yandex.urlGeo}")
     private String urlGeo;
+
     private final HttpClient httpClient;
-    private Position position;
+    private final Position position;
 
     public WeatherService(HttpClient httpClient, Position position) {
         this.httpClient = httpClient;
@@ -86,17 +87,5 @@ public class WeatherService {
                 .build();
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(httpResponse -> Optional.ofNullable(httpResponse.body()));
-    }
-
-    @Getter
-    @Builder
-    public static class Coordinates {
-        private final String latitude;
-        private final String longitude;
-
-        public Coordinates(String latitude, String longitude) {
-            this.latitude = latitude;
-            this.longitude = longitude;
-        }
     }
 }
