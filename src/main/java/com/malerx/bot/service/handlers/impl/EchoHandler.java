@@ -15,13 +15,11 @@ public class EchoHandler implements UpdateHandler {
     @Override
     public CompletableFuture<Optional<Object>> handle(Update update) {
         log.debug("handle() -> handle message {}", update.getMessage());
-        return CompletableFuture.supplyAsync(() -> {
-            SendMessage message = new SendMessage(
-                    update.getMessage().getChatId().toString(),
-                    "Echo: ".concat(update.getMessage().getText().substring(3).trim())
-            );
-            return Optional.of(message);
-        });
+        return CompletableFuture.supplyAsync(() -> Optional.of(
+                new SendMessage(
+                        update.getMessage().getChatId().toString(),
+                        "Echo: ".concat(update.getMessage().getText().substring(3).trim())
+                )));
     }
 
     @Override

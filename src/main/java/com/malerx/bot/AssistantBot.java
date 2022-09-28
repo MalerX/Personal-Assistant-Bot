@@ -49,9 +49,10 @@ public class AssistantBot extends TelegramLongPollingBot {
             while (true) {
                 try {
                     Object object = responses.take();
-                    log.debug("send() -> get responses {}", object);
                     if (object instanceof SendMessage) {
                         SendMessage message = ((SendMessage) object);
+                        log.debug("send() -> object is SendMessage for {} with text {}",
+                                message.getChatId(), message.getText());
                         execute(message);
                     }
                 } catch (Exception e) {

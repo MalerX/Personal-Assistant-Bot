@@ -18,8 +18,7 @@ public class HelpHandler implements UpdateHandler {
                 new SendMessage(
                         update.getMessage().getChatId().toString(),
                         "Тестовый бот, функционал находится в стадии разработки."
-                )
-        ));
+                )));
     }
 
     @Override

@@ -14,8 +14,11 @@ import javax.inject.Singleton;
 @Singleton
 @Slf4j
 public class BotRegistryService implements ApplicationEventListener<ServiceReadyEvent> {
-    @Inject
-    LongPollingBot assistantBot;
+    private final LongPollingBot assistantBot;
+
+    public BotRegistryService(LongPollingBot assistantBot) {
+        this.assistantBot = assistantBot;
+    }
 
     @Override
     public void onApplicationEvent(ServiceReadyEvent event) {
