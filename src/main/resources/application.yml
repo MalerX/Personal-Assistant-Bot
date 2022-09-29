@@ -26,11 +26,11 @@ netty:
     allocator:
       max-order: 3
 telegram:
+  enabled: true
   token: ${BOT_TOKEN}
   username: ${BOT_NAME}
 api:
   yandex:
-    urlWeather: https://api.weather.yandex.ru/v2/informers
     weather: ${WEATHER_TOKEN}
     urlGeo: https://geocode-maps.yandex.ru/1.x/
     geo: ${GEO_TOKEN}

@@ -1,0 +1,14 @@
+telegram:
+  enabled: false
+  token: ${BOT_TOKEN:}
+  username: ${BOT_NAME:}
+api:
+  yandex:
+    urlWeather: https://api.weather.yandex.ru/v2/informers
+    weather: ${WEATHER_TOKEN:}
+    urlGeo: https://geocode-maps.yandex.ru/1.x/
+    geo: ${GEO_TOKEN:}
+datasources:
+  default:
+    url: jdbc:tc:postgresql:12:///postgres
+    driverClassName: org.testcontainers.jdbc.ContainerDatabaseDriver
