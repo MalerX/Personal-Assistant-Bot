@@ -21,8 +21,6 @@ import java.util.concurrent.CompletableFuture;
 public class WeatherService {
     @Value(value = "${api.yandex.weather}")
     private String weatherToken;
-    @Value(value = "${api.yandex.urlWeather}")
-    private String urlWeather;
     @Value(value = "${api.yandex.geo}")
     private String geoToken;
     @Value(value = "${api.yandex.urlGeo}")
@@ -30,10 +28,12 @@ public class WeatherService {
 
     private final HttpClient httpClient;
     private final Position position;
+    private final Weather weather;
 
-    public WeatherService(HttpClient httpClient, Position position) {
+    public WeatherService(HttpClient httpClient, Position position, Weather weather) {
         this.httpClient = httpClient;
         this.position = position;
+        this.weather = weather;
     }
 
     public CompletableFuture<Optional<Object>> getWeather(@NonNull Update update) {
@@ -78,11 +78,9 @@ public class WeatherService {
         if (Objects.isNull(coordinates)) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
-        String geo = String.format("?lat=%s&lon=%s",
-                coordinates.getLatitude(), coordinates.getLongitude());
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create(urlWeather.concat(geo)))
+                .uri(coordinates.getUri())
                 .header("X-Yandex-API-Key", weatherToken)
                 .build();
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())

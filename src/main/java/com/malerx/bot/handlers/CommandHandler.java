@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Сервис обработки входящих событий.
  */
-public interface UpdateHandler {
+public interface CommandHandler {
     /**
      * Обработка входящего события.
      *

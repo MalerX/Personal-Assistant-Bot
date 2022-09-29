@@ -12,14 +12,14 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class HandlerManager {
-    private final Collection<UpdateHandler> handlers;
+    private final Collection<CommandHandler> handlers;
 
-    public HandlerManager(Collection<UpdateHandler> handlers) {
+    public HandlerManager(Collection<CommandHandler> handlers) {
         this.handlers = handlers;
     }
 
     public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
-        for (UpdateHandler handler :
+        for (CommandHandler handler :
                 handlers) {
             if (handler.support(update)) {
                 return handler.handle(update);

@@ -1,6 +1,6 @@
 package com.malerx.bot.handlers.impl;
 
-import com.malerx.bot.handlers.UpdateHandler;
+import com.malerx.bot.handlers.CommandHandler;
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Singleton
 @Slf4j
-public class HelpHandler implements UpdateHandler {
+public class HelpHandler implements CommandHandler {
     private static final String COMMAND = "/help";
 
     @Override
