@@ -28,6 +28,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.telegram/telegrambots
     implementation group: 'org.telegram', name: 'telegrambots', version: '6.1.0'
+    testImplementation "org.testcontainers:postgresql:1.17.3"
 
 }
 
