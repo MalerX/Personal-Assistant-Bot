@@ -18,14 +18,14 @@ public class HandlerManager {
         this.handlers = handlers;
     }
 
-    public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
+    public CompletableFuture<Optional<Object>> commandHandling(@NonNull Update update) {
         for (CommandHandler handler :
                 handlers) {
             if (handler.support(update)) {
                 return handler.handle(update);
             }
         }
-        log.warn("handle() -> not support handle update {}", update.getMessage());
+        log.warn("commandHandling() -> not support commandHandling update {}", update.getMessage());
         return CompletableFuture.completedFuture(Optional.empty());
     }
 }

@@ -17,7 +17,7 @@ public class EchoHandler implements CommandHandler {
 
     @Override
     public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
-        log.debug("handle() -> handle message {}", update.getMessage());
+        log.debug("commandHandling() -> commandHandling message {}", update.getMessage());
         return CompletableFuture.supplyAsync(() -> Optional.of(
                 new SendMessage(
                         update.getMessage().getChatId().toString(),
