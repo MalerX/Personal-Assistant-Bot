@@ -45,7 +45,7 @@ public class ProcessMessage {
                                     try {
                                         responses.put(response.get());
                                     } catch (InterruptedException e) {
-                                        log.error("processing() -> failed add response to queue");
+                                        log.error("processing() -> interrupt add response to queue");
                                     }
                                 } else {
                                     log.error("processing() -> response is empty;");
