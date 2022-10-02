@@ -13,6 +13,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @MicronautTest
 public class RepoTest {
     private final OperatorRepository operatorRepository;
@@ -34,6 +37,10 @@ public class RepoTest {
         operator.setRole(Role.PASS);
         operator.setActive(Boolean.TRUE);
         operatorRepository.save(operator).join();
+        Operator created = operatorRepository.findById(operator.getId()).join();
+        assertTrue(created.getActive());
+        assertEquals(Role.PASS, created.getRole());
+
     }
 
     @Test
@@ -44,7 +51,11 @@ public class RepoTest {
         state.setStage(Stage.PROGRESS);
 
         stateRepository.save(state).join();
-        System.out.println(stateRepository.count().join());
+
+        State created = stateRepository.findById(state.getId()).join();
+        assertEquals(1L, stateRepository.count().join());
+        assertEquals("registerMachine", created.getStateMachina());
+        assertEquals(Stage.PROGRESS, created.getStage());
     }
 
     @Test
@@ -67,6 +78,7 @@ public class RepoTest {
                 .setCars(Set.of(car));
 
         tenantRepository.save(tenant).join();
-        System.out.println(tenantRepository.count().join());
+
+        assertEquals(1L, tenantRepository.count().join());
     }
 }

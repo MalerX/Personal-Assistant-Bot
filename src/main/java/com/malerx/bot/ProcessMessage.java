@@ -38,7 +38,7 @@ public class ProcessMessage {
             while (true) {
                 try {
                     Update update = requests.take();
-                    log.debug("processing() -> incoming update: {}", update.getMessage());
+                    log.debug("processing() -> incoming update from: {}", update.getMessage().getChatId());
                     processingMessage(update)
                             .thenAcceptAsync(response -> {
                                 if (response.isPresent()) {
@@ -59,7 +59,6 @@ public class ProcessMessage {
     }
 
     CompletableFuture<Optional<Object>> processingMessage(@NonNull final Update update) {
-        log.debug("processingMessage() -> processing incoming message from {}", update.getMessage().getChatId());
         if (update.getMessage().getText().startsWith(COMMAND_PREFIX)) {
             return handlerManager.commandHandling(update);
         } else {
