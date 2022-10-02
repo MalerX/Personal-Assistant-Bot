@@ -1,0 +1,71 @@
+{
+   "response" : {
+      "GeoObjectCollection" : {
+         "featureMember" : [
+            {
+               "GeoObject" : {
+                  "Point" : {
+                     "pos" : "37.617698 55.755864"
+                  },
+                  "boundedBy" : {
+                     "Envelope" : {
+                        "lowerCorner" : "36.803268 55.142226",
+                        "upperCorner" : "37.967799 56.021286"
+                     }
+                  },
+                  "description" : "Россия",
+                  "metaDataProperty" : {
+                     "GeocoderMetaData" : {
+                        "Address" : {
+                           "Components" : [
+                              {
+                                 "kind" : "country",
+                                 "name" : "Россия"
+                              },
+                              {
+                                 "kind" : "province",
+                                 "name" : "Центральный федеральный округ"
+                              },
+                              {
+                                 "kind" : "province",
+                                 "name" : "Москва"
+                              }
+                           ],
+                           "country_code" : "RU",
+                           "formatted" : "Россия, Москва"
+                        },
+                        "AddressDetails" : {
+                           "Country" : {
+                              "AddressLine" : "Россия, Москва",
+                              "AdministrativeArea" : {
+                                 "AdministrativeAreaName" : "Москва"
+                              },
+                              "CountryName" : "Россия",
+                              "CountryNameCode" : "RU"
+                           }
+                        },
+                        "kind" : "province",
+                        "precision" : "other",
+                        "text" : "Россия, Москва"
+                     }
+                  },
+                  "name" : "Москва"
+               }
+            }
+         ],
+         "metaDataProperty" : {
+            "GeocoderResponseMetaData" : {
+               "boundedBy" : {
+                  "Envelope" : {
+                     "lowerCorner" : "37.038186 55.312148",
+                     "upperCorner" : "38.2026 56.190802"
+                  }
+               },
+               "found" : "1",
+               "request" : "Москва",
+               "results" : "10"
+            }
+         }
+      }
+   }
+}
