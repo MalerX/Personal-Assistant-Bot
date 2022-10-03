@@ -4,6 +4,7 @@ import com.malerx.bot.factory.BeanFactory;
 import io.micronaut.context.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -49,11 +50,15 @@ public class AssistantBot extends TelegramLongPollingBot {
             while (true) {
                 try {
                     Object object = responses.take();
-                    if (object instanceof SendMessage) {
-                        SendMessage message = ((SendMessage) object);
+                    if (object instanceof SendMessage message) {
                         log.debug("send() -> object is SendMessage for {} with text {}",
                                 message.getChatId(), message.getText());
                         execute(message);
+                    } else {
+                        if (object instanceof SendDocument document) {
+                            log.debug("send() -> object is SenDocument for {}", document.getChatId());
+                            execute(document);
+                        }
                     }
                 } catch (Exception e) {
                     log.error("send() -> got error while polling queue:", e);

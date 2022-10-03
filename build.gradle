@@ -29,7 +29,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.telegram/telegrambots
     implementation group: 'org.telegram', name: 'telegrambots', version: '6.1.0'
     testImplementation "org.testcontainers:postgresql:1.17.3"
-
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcpg-jdk18on
+    implementation group: 'org.bouncycastle', name: 'bcpg-jdk18on', version: '1.72'
 }
 
 
