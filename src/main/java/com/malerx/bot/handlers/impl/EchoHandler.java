@@ -21,7 +21,7 @@ public class EchoHandler implements CommandHandler {
         return CompletableFuture.supplyAsync(() -> Optional.of(
                 new SendMessage(
                         update.getMessage().getChatId().toString(),
-                        "Echo: ".concat(update.getMessage().getText().substring(3).trim())
+                        "Echo: ".concat(update.getMessage().getText().substring(COMMAND.length()).trim())
                 )));
     }
 
