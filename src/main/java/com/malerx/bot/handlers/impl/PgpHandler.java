@@ -5,11 +5,11 @@ import com.malerx.bot.data.entity.TGUser;
 import com.malerx.bot.data.enums.Role;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.CommandHandler;
-import io.micronaut.context.annotation.Value;
 import io.micronaut.core.util.CollectionUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -38,19 +38,23 @@ public class PgpHandler implements CommandHandler {
             log.debug("handle() -> incoming request owner token from {}", update.getMessage().getChatId());
             return tgUserRepository.findByRole(Role.ADMIN)
                     .thenApply(admin -> {
-                        SendDocument message = admin.stream()
+                        var message = admin.stream()
                                 .map(TGUser::getGpgPublicKeys)
                                 .reduce((identity, accumulator) -> {
                                     accumulator.addAll(identity);
                                     return accumulator;
-                                })
-                                .map(this::buildString)
-                                .map(this::createInputFile)
-                                .map(file -> new SendDocument(
-                                        update.getMessage().getChatId().toString(),
-                                        file
-                                )).orElseGet(null);
-                        return Optional.of(message);
+                                });
+                        if (message.isPresent()) {
+                            return Optional.of(new SendDocument(
+                                    update.getMessage().getChatId().toString(),
+                                    createInputFile(buildString(message.get()))));
+                        }
+                        return Optional.of(new SendMessage(
+                                update.getMessage().getChatId().toString(),
+                                """
+                                        В локальной базе данных не найдены записи PGP ключей \
+                                        администраторов системы.
+                                        """));
                     });
 
         }
