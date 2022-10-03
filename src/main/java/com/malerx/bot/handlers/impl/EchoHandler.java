@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class EchoHandler implements CommandHandler {
-    private static final String COMMAND = "!e ";
+    private static final String COMMAND = "/echo ";
 
     @Override
     public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
