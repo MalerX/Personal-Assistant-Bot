@@ -23,8 +23,6 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class PgpHandler implements CommandHandler {
-    @Value(value = "${gpg.public.key}")
-    private String path;
     private static final String COMMAND = "/pgp";
 
     private final TGUserRepository tgUserRepository;
