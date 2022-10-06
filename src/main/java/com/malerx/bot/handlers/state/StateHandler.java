@@ -1,5 +1,7 @@
-package com.malerx.bot.statemachines;
+package com.malerx.bot.handlers.state;
 
+import com.malerx.bot.data.entity.State;
+import com.malerx.bot.handlers.Operation;
 import io.micronaut.core.annotation.NonNull;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -9,7 +11,8 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Общий интерфейс для процессов конечных автоматов.
  */
-public interface StateMachine {
+public interface StateHandler {
 
-    CompletableFuture<Optional<Object>> handle(@NonNull final Update update);
+    @NonNull
+    CompletableFuture<State> proceed(@NonNull Operation operation);
 }

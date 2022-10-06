@@ -15,8 +15,11 @@ import java.util.Set;
 public class TGUser {
     @Id
     private Long id;
-    private String name;
+    private String nickname;
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<GpgRecord> gpgPublicKeys;
     private Role role;
+    @OneToOne
+    @JoinColumn(name = "tenant_id")
+    private Tenant tenant;
 }

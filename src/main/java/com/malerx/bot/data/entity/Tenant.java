@@ -13,6 +13,7 @@ import java.util.Set;
 @Accessors(chain = true)
 public class Tenant {
     @Id
+    @GeneratedValue
     private Long id;
     private String name;
     private String surname;
@@ -21,4 +22,7 @@ public class Tenant {
     private Address address;
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL)
     private Set<Car> cars;
+    @OneToOne
+    @JoinColumn(name = "tg_user_id")
+    private TGUser tgUser;
 }

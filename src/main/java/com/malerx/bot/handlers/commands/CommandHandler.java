@@ -1,4 +1,4 @@
-package com.malerx.bot.handlers;
+package com.malerx.bot.handlers.commands;
 
 import io.micronaut.core.annotation.NonNull;
 import org.telegram.telegrambots.meta.api.objects.Update;
