@@ -1,6 +1,6 @@
-package com.malerx.bot.handlers.impl;
+package com.malerx.bot.handlers.commands.impl;
 
-import com.malerx.bot.handlers.CommandHandler;
+import com.malerx.bot.handlers.commands.CommandHandler;
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -17,7 +17,7 @@ public class EchoHandler implements CommandHandler {
 
     @Override
     public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
-        log.debug("commandHandling() -> commandHandling message {}", update.getMessage());
+        log.debug("handle() -> handle message {}", update.getMessage());
         return CompletableFuture.supplyAsync(() -> Optional.of(
                 new SendMessage(
                         update.getMessage().getChatId().toString(),

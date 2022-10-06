@@ -1,9 +1,10 @@
-package com.malerx.bot.handlers.impl;
+package com.malerx.bot.handlers.commands.impl;
 
 import com.malerx.bot.data.entity.GpgRecord;
 import com.malerx.bot.data.enums.Role;
 import com.malerx.bot.data.repository.TGUserRepository;
-import com.malerx.bot.handlers.CommandHandler;
+import com.malerx.bot.handlers.commands.CommandHandler;
+import io.micronaut.core.annotation.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
@@ -29,7 +30,7 @@ public class PgpHandler implements CommandHandler {
 
     @SneakyThrows
     @Override
-    public CompletableFuture<Optional<Object>> handle(Update update) {
+    public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
         if (update.hasMessage()) {
             log.debug("handle() -> incoming request owner token from {}", update.getMessage().getChatId());
             return tgUserRepository.findByRole(Role.ADMIN)
@@ -63,7 +64,7 @@ public class PgpHandler implements CommandHandler {
     }
 
     @Override
-    public Boolean support(Update update) {
+    public Boolean support(@NonNull Update update) {
         return update.getMessage().getText().startsWith(COMMAND);
     }
 }

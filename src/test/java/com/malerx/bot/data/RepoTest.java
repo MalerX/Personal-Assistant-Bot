@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,16 +48,15 @@ public class RepoTest {
     @Test
     public void stateRepoTest() throws NoSuchAlgorithmException {
         State state = new State();
-        state.setId(SecureRandom.getInstanceStrong().nextLong());
-        state.setStateMachina("registerMachine");
-        state.setStage(Stage.PROGRESS);
+        state.setId(SecureRandom.getInstanceStrong().nextLong())
+                .setStage(Stage.PROCEED)
+                .setStateMachine("StateMachine")
+                .setMessage("Hello");
 
         stateRepository.save(state).join();
 
-        State created = stateRepository.findById(state.getId()).join();
-        assertEquals(1L, stateRepository.count().join());
-        assertEquals("registerMachine", created.getStateMachina());
-        assertEquals(Stage.PROGRESS, created.getStage());
+        Collection<State> created = stateRepository.findByIdByStage(state.getId(), Stage.PROCEED).join();
+        assertEquals(state.getStage(), created.iterator().next().getStage());
     }
 
     @Test
@@ -71,7 +72,6 @@ public class RepoTest {
                 .setRegNumber("А666МР777");
 
         Tenant tenant = new Tenant()
-                .setId(SecureRandom.getInstanceStrong().nextLong())
                 .setName("Vasy")
                 .setSurname("Popov")
                 .setAddress(address)

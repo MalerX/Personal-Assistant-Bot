@@ -37,7 +37,7 @@ public class WeatherService {
     }
 
     public CompletableFuture<Optional<Object>> getWeather(@NonNull Update update) {
-        log.debug("commandHandling() -> incoming request weather");
+        log.debug("handle() -> incoming request weather");
         String[] destination = update.getMessage().getText().split("\\s", 2);
         return getCoordinates(destination[1])
                 .thenCompose(coordinates -> {
