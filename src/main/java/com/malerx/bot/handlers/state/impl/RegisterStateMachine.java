@@ -43,7 +43,7 @@ public class RegisterStateMachine implements StateHandler {
         log.error("proceed() -> wrong step '{}' for '{}'", state.getStep(), state.getMessage());
         return CompletableFuture.completedFuture(
                 state.setStage(Stage.ERROR).setMessage("""
-                        В данном процессе отсутствует настоящий запрошенный этап"""
+                        В данном процессе отсутствует запрошенный этап"""
                 ));
     }
 
