@@ -22,7 +22,4 @@ public class Tenant {
     private Address address;
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL)
     private Set<Car> cars;
-    @OneToOne
-    @JoinColumn(name = "tg_user_id")
-    private TGUser tgUser;
 }

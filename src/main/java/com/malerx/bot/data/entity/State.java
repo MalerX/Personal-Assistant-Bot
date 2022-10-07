@@ -2,8 +2,10 @@ package com.malerx.bot.data.entity;
 
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
@@ -15,6 +17,7 @@ import javax.persistence.Id;
 @Getter
 @Setter
 @Accessors(chain = true)
+@ToString
 public class State {
     @Id
     private Long id;
