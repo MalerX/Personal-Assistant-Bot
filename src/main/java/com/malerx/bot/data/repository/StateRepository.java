@@ -11,6 +11,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Repository
 public interface StateRepository extends AsyncCrudRepository<State, Long> {
-    @Query("FROM State s WHERE s.id = :id AND s.stage = :stage")
-    CompletableFuture<Collection<State>> findByIdByStage(Long id, Stage stage);
+    @Query("FROM State s WHERE s.chatId = :id AND s.stage = :stage ORDER BY s.process")
+    CompletableFuture<Collection<State>> findActiveProcess(Long id, Stage stage);
 }

@@ -12,6 +12,7 @@ import com.malerx.bot.handlers.Operation;
 import com.malerx.bot.handlers.state.StateHandler;
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 import javax.inject.Singleton;
@@ -48,20 +49,19 @@ public class RegisterStateMachine implements StateHandler {
 
     private CompletableFuture<State> one(Operation operation) {
         var user = createUser(operation);
-        if (user.isPresent()) {
-            return userRepository.save(user.get())
-                    .thenApply(u -> operation.state()
-                            .setStep(Step.TWO)
-                            .setMessage("""
-                                    Введите адрес в формате *улица дом квартира*""")
-                    );
-        }
-        return CompletableFuture.completedFuture(operation.state()
-                .setStage(Stage.ERROR)
-                .setMessage("При создании нового пользователя возникла ошибка"));
+        return userRepository.save(user)
+                .thenApply(u -> operation.state()
+                        .setStep(Step.TWO)
+                        .setMessage(
+                                new SendMessage(
+                                        operation.update().getMessage().getChatId().toString(),
+                                        """
+                                                Введите адрес в следующем формате формате
+                                                *УЛИЦА ДОМ КВАРТИРА*"""))
+                );
     }
 
-    private Optional<TGUser> createUser(Operation op) {
+    private TGUser createUser(Operation op) {
         var update = op.update();
         var message = update.getMessage();
 //        var nick = message.getContact().getFirstName() + " " + message.getContact().getLastName();
@@ -69,11 +69,11 @@ public class RegisterStateMachine implements StateHandler {
         var nick = "default";
         Tenant tenant = createTenant(message).orElse(new Tenant());
         log.debug("createUser() -> create tg user {} from message {}", message.getChatId(), message.getText());
-        return Optional.of(new TGUser()
+        return new TGUser()
                 .setId(message.getChatId())
                 .setTenant(tenant)
                 .setNickname(nick)
-                .setRole(Role.TENANT));
+                .setRole(Role.TENANT);
     }
 
     private Optional<Tenant> createTenant(Message message) {
@@ -91,15 +91,18 @@ public class RegisterStateMachine implements StateHandler {
     private CompletableFuture<State> two(Operation operation) {
         var message = operation.update().getMessage();
         var address = createAddress(message).orElse(new Address());
-        return userRepository.findById(operation.state().getId())
+        return userRepository.findById(operation.state().getChatId())
                 .thenCompose(user -> {
                     log.debug("two() -> add Address to Tenant in user {}", user.getId());
                     user.getTenant()
                             .setAddress(address);
                     return userRepository.update(user)
                             .thenApply(updated -> operation.state()
-                                    .setMessage("""
-                                            Спасибо за регистрацию, теперь вам доступны дополнительные опции бота""")
+                                    .setMessage(
+                                            new SendMessage(
+                                                    message.getChatId().toString(),
+                                                    """
+                                                            Спасибо за регистрацию, теперь вам доступны дополнительные опции бота"""))
                                     .setStage(Stage.DONE));
                 });
     }
