@@ -4,6 +4,8 @@ import com.malerx.bot.factory.BeanFactory;
 import com.malerx.bot.handlers.HandlerManager;
 import io.micronaut.context.annotation.Context;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.grizzly.http.util.UDecoder;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.annotation.PostConstruct;
@@ -34,14 +36,11 @@ public class ProcessMessage {
                     log.debug("processing() -> incoming update from: {}", update.getMessage().getChatId());
                     handlerManager.handle(update)
                             .thenAcceptAsync(response -> {
-                                if (response.isPresent()) {
-                                    try {
-                                        responses.put(response.get());
-                                    } catch (InterruptedException e) {
-                                        log.error("processing() -> interrupt add response to queue");
-                                    }
-                                } else {
-                                    log.error("processing() -> response is empty;");
+                                var msg = response.orElseGet(() -> errorMsg(update));
+                                try {
+                                    responses.put(msg);
+                                } catch (InterruptedException e) {
+                                    log.error("processing() -> interrupt add response to queue");
                                 }
                             });
                 } catch (InterruptedException e) {
@@ -49,5 +48,12 @@ public class ProcessMessage {
                 }
             }
         });
+    }
+
+    private Object errorMsg(Update update) {
+        return new SendMessage(
+                update.getMessage().getChatId().toString(),
+                "Oops..."
+        );
     }
 }

@@ -31,14 +31,14 @@ public class RepoTest {
     @Test
     public void stateRepoTest() throws NoSuchAlgorithmException {
         State state = new State();
-        state.setId(SecureRandom.getInstanceStrong().nextLong())
+        state.setChatId(SecureRandom.getInstanceStrong().nextLong())
                 .setStage(Stage.PROCEED)
                 .setStateMachine("StateMachine")
                 .setMessage("Hello");
 
         stateRepository.save(state).join();
 
-        Collection<State> created = stateRepository.findByIdByStage(state.getId(), Stage.PROCEED).join();
+        Collection<State> created = stateRepository.findActiveProcess(state.getId(), Stage.PROCEED).join();
         assertEquals(state.getStage(), created.iterator().next().getStage());
     }
 

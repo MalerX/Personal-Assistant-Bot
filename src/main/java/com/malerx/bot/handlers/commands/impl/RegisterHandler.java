@@ -30,18 +30,22 @@ public class RegisterHandler implements CommandHandler {
     public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
         log.debug("handle() -> handle request of registration");
         State state = new State()
-                .setId(update.getMessage().getChatId())
+                .setChatId(update.getMessage().getChatId())
                 .setStateMachine(RegisterStateMachine.class.getName())
                 .setStep(Step.ONE)
                 .setStage(Stage.PROCEED)
                 .setDescription("""
-                        Регистрация жителя МКД в системе жилого комплекса""")
-                .setMessage("""
-                        Введите ваши имя и фамилию:"""
-                );
+                        Регистрация пользователя в системе бота""")
+                .setMessage(createMsg(update));
         return stateRepository.save(state)
-                .thenApply(s -> Optional.of(
-                        new SendMessage(s.getId().toString(), s.getMessage())));
+                .thenApply(s -> Optional.of(s.getMessage()));
+    }
+
+    private Object createMsg(Update update) {
+        return new SendMessage(
+                update.getMessage().getChatId().toString(),
+                """
+                        Введите ваши имя и фамилию:""");
     }
 
     @Override

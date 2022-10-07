@@ -38,7 +38,7 @@ public class HandlerManager {
 
     public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
         log.debug("handle() -> find started process for {}", update.getMessage().getChatId());
-        return stateRepository.findByIdByStage(update.getMessage().getChatId(), Stage.PROCEED)
+        return stateRepository.findActiveProcess(update.getMessage().getChatId(), Stage.PROCEED)
                 .thenCompose(states -> {
                     if (CollectionUtils.isNotEmpty(states)) {
                         if (states.size() > 1)
@@ -64,18 +64,23 @@ public class HandlerManager {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    private CompletableFuture<Optional<Object>> stateHandling(@NonNull Operation operation) {
+    private CompletableFuture<Optional<Object>> stateHandling(@NonNull final Operation operation) {
         log.debug("stateHandling() -> found state for {}, \nupdate: {}",
                 operation.state(), operation.update().getMessage());
         StateHandler handler = stateMachines.get(operation.state().getStateMachine());
         log.debug("stateHandling() -> get machine {}", handler);
-        return handler.proceed(operation)
-                .thenCompose(this::updateState)
-                .thenApply(r -> r.map(State::toMessage));
+        if (Objects.nonNull(handler)) {
+            return handler.proceed(operation)
+                    .thenCompose(this::handleResult);
+        }
+        operation.state()
+                .setStage(Stage.ERROR)
+                .setMessage("Произошла ошибка. Не найден подходящий обработчик состояния");
+        return handleResult(operation.state());
     }
 
-    private CompletableFuture<Optional<State>> updateState(State state) {
-        return stateRepository.update(state)
-                .thenApply(Optional::of);
+    private CompletableFuture<Optional<Object>> handleResult(final State s) {
+        return stateRepository.update(s)
+                .thenApply(r -> Optional.of(s.toMessage()));
     }
 }
