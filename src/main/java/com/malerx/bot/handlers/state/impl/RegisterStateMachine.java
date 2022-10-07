@@ -62,10 +62,10 @@ public class RegisterStateMachine implements StateHandler {
     }
 
     private Optional<TGUser> createUser(Operation op) {
-        var state = op.state();
         var update = op.update();
         var message = update.getMessage();
 //        var nick = message.getContact().getFirstName() + " " + message.getContact().getLastName();
+        log.debug("createUser() -> contact: {}", message.getContact());
         var nick = "default";
         Tenant tenant = createTenant(message).orElse(new Tenant());
         log.debug("createUser() -> create tg user {} from message {}", message.getChatId(), message.getText());
@@ -100,7 +100,7 @@ public class RegisterStateMachine implements StateHandler {
                             .thenApply(updated -> operation.state()
                                     .setMessage("""
                                             Спасибо за регистрацию, теперь вам доступны дополнительные опции бота""")
-                                    .setStep(Step.END));
+                                    .setStage(Stage.DONE));
                 });
     }
 

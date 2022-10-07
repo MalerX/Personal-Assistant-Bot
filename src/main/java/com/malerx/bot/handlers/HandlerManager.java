@@ -2,7 +2,6 @@ package com.malerx.bot.handlers;
 
 import com.malerx.bot.data.entity.State;
 import com.malerx.bot.data.enums.Stage;
-import com.malerx.bot.data.enums.Step;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import com.malerx.bot.handlers.state.StateHandler;
@@ -76,11 +75,6 @@ public class HandlerManager {
     }
 
     private CompletableFuture<Optional<State>> updateState(State state) {
-        if (Objects.equals(Step.END, state.getStep())) {
-            log.debug("updateState() -> save state for {} with stage {}", state.getId(), state.getStage());
-            return stateRepository.delete(state)
-                    .thenApply(v -> Optional.of(state));
-        }
         return stateRepository.update(state)
                 .thenApply(Optional::of);
     }

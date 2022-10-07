@@ -2,6 +2,8 @@ package com.malerx.bot.data.entity;
 
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
+import io.micronaut.data.annotation.DateCreated;
+import io.micronaut.data.annotation.DateUpdated;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +14,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.util.Date;
 
 @Entity
 @Getter
@@ -27,8 +30,14 @@ public class State {
     private String message;
     private Step step;
     private String description;
+    @DateCreated
+    private Date start;
+    @DateUpdated
+    private Date process;
 
     public SendMessage toMessage() {
-        return new SendMessage(this.id.toString(), this.message);
+        var message = new SendMessage(this.id.toString(), this.message);
+        message.enableMarkdown(true);
+        return message;
     }
 }
