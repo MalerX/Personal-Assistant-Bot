@@ -3,7 +3,7 @@ micronaut:
     name: personalAssistantBot
     default-charset: UTF-8
   server:
-    port: 8383
+    port: 7373
 datasources:
   default:
     url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:bot_db}?createDatabaseIfNotExist=true

@@ -2,6 +2,7 @@ package com.malerx.bot.handlers;
 
 import com.malerx.bot.data.entity.State;
 import com.malerx.bot.data.enums.Stage;
+import com.malerx.bot.data.enums.Step;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import com.malerx.bot.handlers.state.StateHandler;
@@ -41,8 +42,11 @@ public class HandlerManager {
         return stateRepository.findByIdByStage(update.getMessage().getChatId(), Stage.PROCEED)
                 .thenCompose(states -> {
                     if (CollectionUtils.isNotEmpty(states)) {
+                        if (states.size() > 1)
+                            log.warn("handle() -> found more than one states for tg: {}", update.getMessage().getChatId());
+                        var state = states.iterator().next();
                         return stateHandling(
-                                new Operation(update, states.iterator().next()));
+                                new Operation(update, state));
                     }
                     log.debug("handle() -> not found started state");
                     return commandHandling(update);
@@ -62,19 +66,22 @@ public class HandlerManager {
     }
 
     private CompletableFuture<Optional<Object>> stateHandling(@NonNull Operation operation) {
-        log.debug("stateHandling() -> found state for {}", operation.state().getId());
+        log.debug("stateHandling() -> found state for {}, \nupdate: {}",
+                operation.state(), operation.update().getMessage());
         StateHandler handler = stateMachines.get(operation.state().getStateMachine());
+        log.debug("stateHandling() -> get machine {}", handler);
         return handler.proceed(operation)
                 .thenCompose(this::updateState)
-                .thenApply(this::createMessage);
+                .thenApply(r -> r.map(State::toMessage));
     }
 
-    private CompletableFuture<State> updateState(State state) {
-        log.debug("updateState() -> save state for {} with stage {}", state.getId(), state.getStage());
-        return stateRepository.update(state);
-    }
-
-    private Optional<Object> createMessage(State state) {
-        return Optional.of(state.toMessage());
+    private CompletableFuture<Optional<State>> updateState(State state) {
+        if (Objects.equals(Step.END, state.getStep())) {
+            log.debug("updateState() -> save state for {} with stage {}", state.getId(), state.getStage());
+            return stateRepository.delete(state)
+                    .thenApply(v -> Optional.of(state));
+        }
+        return stateRepository.update(state)
+                .thenApply(Optional::of);
     }
 }

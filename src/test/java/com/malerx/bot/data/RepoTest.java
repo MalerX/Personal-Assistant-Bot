@@ -1,9 +1,10 @@
 package com.malerx.bot.data;
 
-import com.malerx.bot.data.entity.*;
-import com.malerx.bot.data.enums.Role;
+import com.malerx.bot.data.entity.Address;
+import com.malerx.bot.data.entity.Car;
+import com.malerx.bot.data.entity.State;
+import com.malerx.bot.data.entity.Tenant;
 import com.malerx.bot.data.enums.Stage;
-import com.malerx.bot.data.repository.OperatorRepository;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TenantRepository;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
@@ -12,37 +13,19 @@ import org.junit.jupiter.api.Test;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @MicronautTest
 public class RepoTest {
-    private final OperatorRepository operatorRepository;
     private final StateRepository stateRepository;
     private final TenantRepository tenantRepository;
 
-    public RepoTest(OperatorRepository operatorRepository,
-                    StateRepository stateRepository,
+    public RepoTest(StateRepository stateRepository,
                     TenantRepository tenantRepository) {
-        this.operatorRepository = operatorRepository;
         this.stateRepository = stateRepository;
         this.tenantRepository = tenantRepository;
-    }
-
-    @Test
-    public void operatorRepoTest() throws NoSuchAlgorithmException {
-        Operator operator = new Operator();
-        operator.setId(SecureRandom.getInstanceStrong().nextLong());
-        operator.setRole(Role.PASS);
-        operator.setActive(Boolean.TRUE);
-        operatorRepository.save(operator).join();
-        Operator created = operatorRepository.findById(operator.getId()).join();
-        assertTrue(created.getActive());
-        assertEquals(Role.PASS, created.getRole());
-
     }
 
     @Test

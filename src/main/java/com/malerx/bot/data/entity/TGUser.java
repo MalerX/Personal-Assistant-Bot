@@ -19,7 +19,6 @@ public class TGUser {
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<GpgRecord> gpgPublicKeys;
     private Role role;
-    @OneToOne
-    @JoinColumn(name = "tenant_id")
+    @OneToOne(cascade = CascadeType.ALL)
     private Tenant tenant;
 }

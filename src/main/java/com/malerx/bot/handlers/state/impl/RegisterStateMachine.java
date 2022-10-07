@@ -12,10 +12,10 @@ import com.malerx.bot.handlers.Operation;
 import com.malerx.bot.handlers.state.StateHandler;
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.Message;
 
 import javax.inject.Singleton;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -30,7 +30,6 @@ public class RegisterStateMachine implements StateHandler {
     @Override
     @NonNull
     public CompletableFuture<State> proceed(@NonNull Operation operation) {
-        log.debug(("proceed() -> "));
         switch (operation.state().getStep()) {
             case ONE -> {
                 return one(operation);
@@ -39,52 +38,84 @@ public class RegisterStateMachine implements StateHandler {
                 return two(operation);
             }
         }
+        var state = operation.state();
+        log.error("proceed() -> wrong step '{}' for '{}'", state.getStep(), state.getMessage());
         return CompletableFuture.completedFuture(
-                new State()
-                        .setId(operation.update().getMessage().getChatId())
-                        .setStateMachine(this.getClass().getName())
-                        .setStage(Stage.ERROR)
-                        .setMessage("Этап не предусмотрен выполнением настоящей операции"));
+                state.setStage(Stage.ERROR).setMessage("""
+                        В данном процессе отсутствует настоящий запрошенный этап"""
+                ));
     }
 
     private CompletableFuture<State> one(Operation operation) {
-        Update update = operation.update();
-        String[] firstSecond = update.getMessage().getText().split("\s");
-        TGUser user = new TGUser()
-                .setId(update.getMessage().getChatId())
-                .setRole(Role.TENANT);
-        return userRepository.save(user)
-                .thenApply(u -> operation.state()
-                        .setStep(Step.TWO)
-                        .setMessage("""
-                                Введите адрес в формате *улица дом квартира""")
-                );
+        var user = createUser(operation);
+        if (user.isPresent()) {
+            return userRepository.save(user.get())
+                    .thenApply(u -> operation.state()
+                            .setStep(Step.TWO)
+                            .setMessage("""
+                                    Введите адрес в формате *улица дом квартира*""")
+                    );
+        }
+        return CompletableFuture.completedFuture(operation.state()
+                .setStage(Stage.ERROR)
+                .setMessage("При создании нового пользователя возникла ошибка"));
+    }
+
+    private Optional<TGUser> createUser(Operation op) {
+        var state = op.state();
+        var update = op.update();
+        var message = update.getMessage();
+//        var nick = message.getContact().getFirstName() + " " + message.getContact().getLastName();
+        var nick = "default";
+        Tenant tenant = createTenant(message).orElse(new Tenant());
+        log.debug("createUser() -> create tg user {} from message {}", message.getChatId(), message.getText());
+        return Optional.of(new TGUser()
+                .setId(message.getChatId())
+                .setTenant(tenant)
+                .setNickname(nick)
+                .setRole(Role.TENANT));
+    }
+
+    private Optional<Tenant> createTenant(Message message) {
+        var nameSurname = message.getText().split("\s");
+        if (nameSurname.length == 2) {
+            return Optional.of(new Tenant()
+                    .setName(nameSurname[0])
+                    .setSurname(nameSurname[1]));
+        } else {
+            log.error("createTenant() -> input format name/surname is not valid");
+            return Optional.empty();
+        }
     }
 
     private CompletableFuture<State> two(Operation operation) {
-        String[] address = operation.update().getMessage().getText().split("\s");
+        var message = operation.update().getMessage();
+        var address = createAddress(message).orElse(new Address());
         return userRepository.findById(operation.state().getId())
                 .thenCompose(user -> {
-                    if (Objects.nonNull(user)) {
-                        user.getTenant()
-                                .setAddress(new Address()
-                                        .setStreet(address[0])
-                                        .setBuild(address[1])
-                                        .setApartment(address[2]));
-                        return userRepository.update(user)
-                                .thenApply(updated -> {
-                                    return operation.state()
-                                            .setStep(Step.THREE)
-                                            .setMessage("""
-                                                    Введите информацию об автомобиле в следующем формате:
-                                                    *модель цвет регистрационный номер*""");
-                                });
-                    }
-                    log.error("two() -> not found user with ID {}", operation.state().getId());
-                    return CompletableFuture.completedFuture(
-                            operation.state()
+                    log.debug("two() -> add Address to Tenant in user {}", user.getId());
+                    user.getTenant()
+                            .setAddress(address);
+                    return userRepository.update(user)
+                            .thenApply(updated -> operation.state()
                                     .setMessage("""
-                                            Не найден пользователь с ID %d""".formatted(operation.state().getId())));
+                                            Спасибо за регистрацию, теперь вам доступны дополнительные опции бота""")
+                                    .setStep(Step.END));
                 });
+    }
+
+    private Optional<Address> createAddress(Message message) {
+        log.debug("createAddress() -> create Address from {}", message.getText());
+        var streetBuildNumber = message.getText().split("\s");
+        if (streetBuildNumber.length == 3) {
+            return Optional.of(new Address()
+                    .setStreet(streetBuildNumber[0])
+                    .setBuild(streetBuildNumber[1])
+                    .setApartment(streetBuildNumber[2]));
+        }
+        {
+            log.debug("createAddress() -> wrong input text: {}", message.getText());
+            return Optional.empty();
+        }
     }
 }
