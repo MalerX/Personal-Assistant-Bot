@@ -32,7 +32,7 @@ public class HandlerManager {
         this.commands = commands;
         this.stateMachines = states.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toMap(m -> m.getClass().getName(), m -> m));
+                .collect(Collectors.toMap(m -> m.getClass().getSimpleName(), m -> m));
         this.stateRepository = stateRepository;
     }
 
@@ -68,19 +68,7 @@ public class HandlerManager {
         log.debug("stateHandling() -> found state for {}, \nupdate: {}",
                 operation.state(), operation.update().getMessage());
         StateHandler handler = stateMachines.get(operation.state().getStateMachine());
-        log.debug("stateHandling() -> get machine {}", handler);
-        if (Objects.nonNull(handler)) {
-            return handler.proceed(operation)
-                    .thenCompose(this::handleResult);
-        }
-        operation.state()
-                .setStage(Stage.ERROR)
-                .setMessage("Произошла ошибка. Не найден подходящий обработчик состояния");
-        return handleResult(operation.state());
-    }
-
-    private CompletableFuture<Optional<Object>> handleResult(final State s) {
-        return stateRepository.update(s)
-                .thenApply(r -> Optional.of(s.toMessage()));
+        log.debug("stateHandling() -> get machine {}", handler.getClass().getSimpleName());
+        return handler.proceed(operation);
     }
 }

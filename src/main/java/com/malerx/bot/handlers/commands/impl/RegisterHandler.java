@@ -31,7 +31,7 @@ public class RegisterHandler implements CommandHandler {
         log.debug("handle() -> handle request of registration");
         State state = new State()
                 .setChatId(update.getMessage().getChatId())
-                .setStateMachine(RegisterStateMachine.class.getName())
+                .setStateMachine(RegisterStateMachine.class.getSimpleName())
                 .setStep(Step.ONE)
                 .setStage(Stage.PROCEED)
                 .setDescription("""
