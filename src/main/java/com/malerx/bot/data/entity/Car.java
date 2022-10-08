@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 @Entity
 @Getter
@@ -17,7 +19,18 @@ public class Car {
     private String model;
     private String color;
     private String regNumber;
-    @ManyToOne
-    @JoinColumn(name = "tenant_id")
-    private Tenant tenant;
+
+    @Override
+    public String toString() {
+        String sb = "Модель: " +
+                ";\nцвет: " +
+                color +
+                ";\nрегистрационный номер: " +
+                regNumber;
+        return """
+                модель: %s
+                цветЖ %s
+                гос номер: %s"""
+                .formatted(this.model, this.color, this.regNumber);
+    }
 }

@@ -20,6 +20,6 @@ public class Tenant {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id")
     private Address address;
-    @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
     private Set<Car> cars;
 }
