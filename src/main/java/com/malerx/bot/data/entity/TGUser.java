@@ -3,6 +3,7 @@ package com.malerx.bot.data.entity;
 import com.malerx.bot.data.enums.Role;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -12,6 +13,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Accessors(chain = true)
+@ToString
 public class TGUser {
     @Id
     private Long id;

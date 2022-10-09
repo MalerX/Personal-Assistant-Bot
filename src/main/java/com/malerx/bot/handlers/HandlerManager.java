@@ -8,6 +8,7 @@ import com.malerx.bot.handlers.state.StateHandler;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.inject.Singleton;
@@ -61,7 +62,14 @@ public class HandlerManager {
             }
         }
         log.warn("handle() -> not support handle update {}", update.getMessage());
-        return CompletableFuture.completedFuture(Optional.empty());
+        var msg = new SendMessage(update.getMessage().getChatId().toString(),
+                """
+                        У вас нет начатых/незавершённых процессов.
+                        Чтобы ознакомиться c доступными услугами введите
+                                               
+                        \t\t\t*/help*""");
+        msg.enableMarkdown(Boolean.TRUE);
+        return CompletableFuture.completedFuture(Optional.of(msg));
     }
 
     private CompletableFuture<Optional<Object>> stateHandling(@NonNull final Operation operation) {

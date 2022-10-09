@@ -12,7 +12,7 @@ import com.malerx.bot.handlers.state.StateHandler;
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
@@ -54,26 +54,35 @@ public class CarRegistration implements StateHandler {
     }
 
     private CompletableFuture<Optional<Object>> one(Operation op) {
+        var message = op.update().getMessage();
         return findUser(op.state().getChatId())
                 .thenCompose(user -> {
                     if (Objects.nonNull(user)) {
                         var tenant = user.getTenant();
-                        var car = createCar(op.update());
+                        var car = createCar(message);
+                        if (car.isEmpty()) {
+                            return CompletableFuture.completedFuture(Optional.of(createMsg(message,
+                                    """
+                                            Введённые данные не соответствуют ожидаемому формату. Проверьте \
+                                            вводимые данные""")));
+                        }
                         Set<Car> cars = new HashSet<>(user.getTenant().getCars());
-                        cars.add(car);
+                        cars.add(car.get());
                         tenant.setCars(cars);
+                        var s = op.state()
+                                .setStep(Step.TWO);
                         return userRepository.update(user)
-                                .thenCombine(updateState(op.state()), (u, s) -> {
+                                .thenCombine(updateState(s), (u, us) -> {
                                     var checkInputMsg = """
-                                            Всё верно?
-                                            %s""".formatted(car.toString());
-                                    return Optional.of(createAnswer(op, checkInputMsg));
+                                            Всё верно?%s""".formatted(car.get().toString());
+                                    return Optional.of(createAnswer(message, checkInputMsg));
                                 });
                     }
                     log.error("one() -> not found user with idop.state()");
                     var s = op.state()
                             .setStage(Stage.ERROR)
-                            .setMessage(createMsg(op, "Not found user wit ID %d".formatted(op.state().getChatId())));
+                            .setMessage(createMsg(message,
+                                    "Not found user wit ID %d".formatted(message.getChatId())));
                     return stateRepository.update(s)
                             .thenApply(r -> Optional.of(s.toMessage()));
                 });
@@ -84,8 +93,8 @@ public class CarRegistration implements StateHandler {
         return userRepository.findById(id);
     }
 
-    private SendMessage createAnswer(Operation o, String text) {
-        var msg = createMsg(o, text);
+    private SendMessage createAnswer(Message m, String text) {
+        var msg = createMsg(m, text);
         msg.setReplyMarkup(createKeyboard());
         return msg;
     }
@@ -106,41 +115,47 @@ public class CarRegistration implements StateHandler {
                 .build();
     }
 
-    private Car createCar(final Update update) {
-        String[] carIfo = update.getMessage().getText().split("\n");
+    private Optional<Car> createCar(final Message m) {
+        String[] carIfo = m.getText().split("\n");
+        if (carIfo.length != 3) {
+            log.error("createCar() -> wrong auto data format");
+            return Optional.empty();
+        }
         log.debug("createCar() -> crete car from {}", Arrays.toString(carIfo));
-        return new Car()
+        return Optional.of(new Car()
                 .setModel(carIfo[0])
                 .setColor(carIfo[1])
-                .setRegNumber(carIfo[2]);
+                .setRegNumber(carIfo[2]));
     }
 
     private CompletableFuture<Optional<Object>> two(Operation op) {
         var command = op.update().getMessage().getText();
+        final State s;
         if (Objects.equals(YES, command)) {
-            var s = op.state()
+            s = op.state()
                     .setStage(Stage.DONE)
                     .setMessage("""
-                            Машина успешно зарегистрирована""");
-            return updateState(s).thenApply(r -> Optional.of(s.toMessage()));
+                            Автомобиль успешно зарегистрирована""");
         } else if (Objects.equals(NO, command)) {
-            op.state()
+            s = op.state()
                     .setStep(Step.ONE)
                     .setMessage("""
-                            Введите заново информацию об автомобиле разделённую по строкам:
-                            ***модель
+                            Введите корректную информацию об автомобиле разделённую по строкам:
+                                                        
+                            *модель
                             цвет
-                            номер год регистрации***""");
+                            номер год регистрации*""");
+        } else {
+            log.error("two() -> undefine command {} for this stage", command);
+            s = op.state()
+                    .setStage(Stage.ERROR)
+                    .setMessage("Данная команда не определена. Попробуйте снова.");
         }
-        log.error("two() -> undefine command {} fro this stage", command);
-        var s = op.state()
-                .setStage(Stage.ERROR)
-                .setMessage("Данная команда не определена. Попробуйте снова.");
         return updateState(s).thenApply(r -> Optional.of(s.toMessage()));
     }
 
-    private SendMessage createMsg(Operation op, String text) {
-        var message = new SendMessage(op.state().getChatId().toString(), text);
+    private SendMessage createMsg(Message m, String text) {
+        var message = new SendMessage(m.getChatId().toString(), text);
         message.enableMarkdown(Boolean.TRUE);
         return message;
     }

@@ -36,11 +36,12 @@ public class ProcessMessage {
                     log.debug("processing() -> incoming update from: {}", update.getMessage().getChatId());
                     handlerManager.handle(update)
                             .thenAcceptAsync(response -> {
-                                var msg = response.orElseGet(() -> errorMsg(update));
-                                try {
-                                    responses.put(msg);
-                                } catch (InterruptedException e) {
-                                    log.error("processing() -> interrupt add response to queue");
+                                if (response.isPresent()) {
+                                    try {
+                                        responses.put(response.get());
+                                    } catch (InterruptedException e) {
+                                        log.error("processing() -> interrupt add response to queue");
+                                    }
                                 }
                             });
                 } catch (InterruptedException e) {
@@ -48,12 +49,5 @@ public class ProcessMessage {
                 }
             }
         });
-    }
-
-    private Object errorMsg(Update update) {
-        return new SendMessage(
-                update.getMessage().getChatId().toString(),
-                "Oops..."
-        );
     }
 }

@@ -22,15 +22,12 @@ public class Car {
 
     @Override
     public String toString() {
-        String sb = "Модель: " +
-                ";\nцвет: " +
-                color +
-                ";\nрегистрационный номер: " +
-                regNumber;
         return """
+                
+                
                 модель: %s
-                цветЖ %s
-                гос номер: %s"""
+                цвет: %s
+                госномер: %s """
                 .formatted(this.model, this.color, this.regNumber);
     }
 }
