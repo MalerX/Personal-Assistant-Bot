@@ -17,11 +17,19 @@ public class HelpHandler implements CommandHandler {
 
     @Override
     public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
-        return CompletableFuture.supplyAsync(() -> Optional.of(
-                new SendMessage(
-                        update.getMessage().getChatId().toString(),
-                        "Тестовый бот, функционал находится в стадии разработки."
-                )));
+        return CompletableFuture.supplyAsync(() -> {
+            var m = new SendMessage(
+                    update.getMessage().getChatId().toString(),
+                    """
+                            *register* - Регистрация пользователя в системе. Требуются *имя фамилия* и *адрес*. \
+                            В БД заводится сущность TGUser.\040
+                            *reg_car* - создаётся сущность Car и связывается с сущностью Tenet\040
+                            *info* - Информация в системе
+                            *help* - Помощь по командам бота"""
+            );
+            m.enableMarkdown(Boolean.TRUE);
+            return Optional.of(m);
+        });
     }
 
     @Override

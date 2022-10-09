@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class WeatherHandler implements CommandHandler {
-    private static final String COMMAND = "/погода ";
+    private static final String COMMAND = "/погода";
 
     private final WeatherService weatherService;
 

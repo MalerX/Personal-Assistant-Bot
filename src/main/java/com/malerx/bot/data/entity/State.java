@@ -23,7 +23,6 @@ public class State {
     @GeneratedValue
     private Long id;
     private Long chatId;
-    @Column(name = "state_machine")
     private String stateMachine;
     private Stage stage;
     private Step step;
@@ -36,11 +35,14 @@ public class State {
     private Object message;
 
     public Object toMessage() {
-        if (message instanceof String)
-            return new SendMessage(
+        if (message instanceof String) {
+            var m = new SendMessage(
                     this.chatId.toString(),
                     this.message.toString()
             );
+            m.enableMarkdown(Boolean.TRUE);
+            return m;
+        }
         return this.message;
     }
 }
