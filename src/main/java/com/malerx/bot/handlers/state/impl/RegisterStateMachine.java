@@ -137,7 +137,7 @@ public class RegisterStateMachine implements StateHandler {
                             var s = operation.state()
                                     .setMessage(createMessage(message.getChatId(),
                                             """
-                                                    Спасибо за регистрацию, теперь вам доступны\
+                                                    Спасибо за регистрацию, теперь вам доступны \
                                                     дополнительные опции бота"""))
                                     .setStage(Stage.DONE);
                             return updateState(s)
