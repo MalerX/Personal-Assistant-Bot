@@ -1,4 +1,4 @@
-package com.malerx.bot.handlers.state.nsm;
+package com.malerx.bot.handlers.state.nsm.register.user;
 
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.entity.TGUser;
@@ -7,6 +7,7 @@ import com.malerx.bot.data.enums.Role;
 import com.malerx.bot.data.enums.Step;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
+import com.malerx.bot.handlers.state.nsm.State;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -53,14 +54,14 @@ public class FirstStepRegister implements State {
                     state.setStep(Step.TWO);
                     return stateRepository.update(state)
                             .thenApply(r -> Optional.of(
-                                    createMessage(
-                                            """
-                                                    Введите адрес в следующем формате формате\
-                                                    (улица/дом/квартира на отдельных строках):
-                                                                   
-                                                    \t*УЛИЦА
-                                                    \tДОМ
-                                                    \tКВАРТИРА*""")));
+                                    createMessage("""
+                                            Введите адрес в следующем формате формате\
+                                            (улица/дом/квартира на отдельных строках):
+                                                           
+                                            \t*УЛИЦА
+                                            \tДОМ
+                                            \tКВАРТИРА*""")
+                            ));
                 });
     }
 

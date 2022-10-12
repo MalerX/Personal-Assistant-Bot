@@ -1,15 +1,16 @@
-package com.malerx.bot.handlers.state.nsm;
+package com.malerx.bot.handlers.state.nsm.register.user;
 
 import com.malerx.bot.data.entity.Address;
 import com.malerx.bot.data.entity.PersistState;
+import com.malerx.bot.data.entity.TGUser;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
+import com.malerx.bot.handlers.state.nsm.State;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -17,7 +18,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class SecondStepRegister implements State {
-    private final User user;
     private final Message message;
     private final PersistState state;
 
@@ -28,7 +28,6 @@ public class SecondStepRegister implements State {
                               PersistState state,
                               StateRepository stateRepository,
                               TGUserRepository userRepository) {
-        this.user = update.getMessage().getFrom();
         this.message = update.getMessage();
         this.state = state;
         this.stateRepository = stateRepository;
@@ -38,37 +37,43 @@ public class SecondStepRegister implements State {
     @Override
     public CompletableFuture<Optional<Object>> nextStep() {
         return userRepository.findById(message.getChatId())
-                .thenCompose(tgUser -> {
-                    if (Objects.isNull(tgUser)) {
-                        state.setStage(Stage.ERROR)
-                                .setDescription("Не найдет пользователь");
-                        var msg = createMessage("""
-                                Не найден пользователь с ID %d"""
-                                .formatted(message.getChatId()));
-                        return stateRepository.update(state)
-                                .thenApply(r -> Optional.of(msg));
-                    }
+                .thenCompose(user -> {
+                    if (Objects.isNull(user))
+                        return alreadyRegistered();
+
                     var address = createAddress();
-                    address.ifPresentOrElse(a -> {
-                        log.debug("two() -> add Address to Tenant in user {}", user.getId());
-                        tgUser.getTenant().setAddress(a);
-                    }, () -> log.error("two() -> address not create"));
-                    if (address.isPresent()) {
-                        return userRepository.update(tgUser)
-                                .thenCompose(updated -> {
-                                    state.setStage(Stage.DONE);
-                                    var msg = createMessage("""
-                                            Спасибо за регистрацию, теперь вам доступны \
-                                            дополнительные опции бота""");
-                                    return stateRepository.update(state)
-                                            .thenApply(r -> Optional.of(msg));
-                                });
-                    }
+                    if (address.isPresent())
+                        return updateUser(user, address.get());
+
                     log.error("two() -> fail create address");
                     return CompletableFuture.completedFuture(Optional.of(
                             createMessage("""
                                     Ошибка при создании адреса. Проверьте введённые данные"""
                             )));
+                });
+    }
+
+    private CompletableFuture<Optional<Object>> alreadyRegistered() {
+        state.setStage(Stage.ERROR)
+                .setDescription("Не найдет пользователь");
+        var msg = createMessage("""
+                Не найден пользователь с ID %d"""
+                .formatted(message.getChatId()));
+        return stateRepository.update(state)
+                .thenApply(r -> Optional.of(msg));
+    }
+
+    private CompletableFuture<Optional<Object>> updateUser(TGUser user, Address address) {
+        log.debug("updateTgUser() -> update user {}", user.getId());
+        user.getTenant().setAddress(address);
+        return userRepository.update(user)
+                .thenCompose(updated -> {
+                    state.setStage(Stage.DONE);
+                    var msg = createMessage("""
+                            Спасибо за регистрацию, теперь вам доступны \
+                            дополнительные опции бота""");
+                    return stateRepository.update(state)
+                            .thenApply(r -> Optional.of(msg));
                 });
     }
 

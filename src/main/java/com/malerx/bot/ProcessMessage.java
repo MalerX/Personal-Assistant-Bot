@@ -4,11 +4,10 @@ import com.malerx.bot.factory.BeanFactory;
 import com.malerx.bot.handlers.HandlerManager;
 import io.micronaut.context.annotation.Context;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.http.util.UDecoder;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.annotation.PostConstruct;
+import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
@@ -36,18 +35,27 @@ public class ProcessMessage {
                     log.debug("processing() -> incoming update from: {}", update.getMessage().getChatId());
                     handlerManager.handle(update)
                             .thenAcceptAsync(response -> {
-                                if (response.isPresent()) {
-                                    try {
-                                        responses.put(response.get());
-                                    } catch (InterruptedException e) {
-                                        log.error("processing() -> interrupt add response to queue");
-                                    }
-                                }
+                                response.ifPresent(this::define);
                             });
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
         });
+    }
+
+    private void define(Object o) {
+        if (o instanceof Collection<?> os)
+            os.forEach(this::send);
+        else
+            send(o);
+    }
+
+    private void send(Object o) {
+        try {
+            responses.put(o);
+        } catch (InterruptedException e) {
+            log.error("processing() -> interrupt add response to queue");
+        }
     }
 }

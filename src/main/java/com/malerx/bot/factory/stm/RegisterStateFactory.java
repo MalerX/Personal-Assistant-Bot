@@ -2,8 +2,8 @@ package com.malerx.bot.factory.stm;
 
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.repository.*;
-import com.malerx.bot.handlers.state.nsm.FirstStepRegister;
-import com.malerx.bot.handlers.state.nsm.SecondStepRegister;
+import com.malerx.bot.handlers.state.nsm.register.user.FirstStepRegister;
+import com.malerx.bot.handlers.state.nsm.register.user.SecondStepRegister;
 import com.malerx.bot.handlers.state.nsm.State;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
