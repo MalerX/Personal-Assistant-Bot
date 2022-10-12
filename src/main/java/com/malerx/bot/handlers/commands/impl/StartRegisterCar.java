@@ -5,6 +5,7 @@ import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
+import com.malerx.bot.factory.stm.RegisterCarStateFactory;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import com.malerx.bot.handlers.state.impl.CarRegistration;
 import io.micronaut.core.annotation.NonNull;
@@ -55,7 +56,7 @@ public class StartRegisterCar implements CommandHandler {
         return new PersistState()
                 .setChatId(update.getMessage().getChatId())
                 .setDescription("Регистрация автомобиля в системе бота")
-                .setStateMachine(CarRegistration.class.getSimpleName())
+                .setStateMachine(RegisterCarStateFactory.class.getSimpleName())
                 .setStage(Stage.PROCEED)
                 .setStep(Step.ONE);
     }

@@ -32,7 +32,6 @@ public class ProcessMessage {
             while (true) {
                 try {
                     Update update = requests.take();
-                    log.debug("processing() -> incoming update from: {}", update.getMessage().getChatId());
                     handlerManager.handle(update)
                             .thenAcceptAsync(response -> {
                                 response.ifPresent(this::define);
