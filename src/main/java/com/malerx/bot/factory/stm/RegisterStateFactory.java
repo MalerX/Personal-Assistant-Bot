@@ -13,24 +13,12 @@ import javax.inject.Singleton;
 @Singleton
 @Slf4j
 public class RegisterStateFactory implements StateFactory {
-    private final AddressRepository addressRepository;
-    private final CarRepository carRepository;
-    private final PgpRepository pgpRepository;
     private final StateRepository stateRepository;
-    private final TenantRepository tenantRepository;
     private final TGUserRepository userRepository;
 
-    public RegisterStateFactory(AddressRepository addressRepository,
-                                CarRepository carRepository,
-                                PgpRepository pgpRepository,
-                                StateRepository stateRepository,
-                                TenantRepository tenantRepository,
+    public RegisterStateFactory(StateRepository stateRepository,
                                 TGUserRepository userRepository) {
-        this.addressRepository = addressRepository;
-        this.carRepository = carRepository;
-        this.pgpRepository = pgpRepository;
         this.stateRepository = stateRepository;
-        this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
     }
 
@@ -44,7 +32,9 @@ public class RegisterStateFactory implements StateFactory {
             case TWO -> {
                 return new SecondStepRegister(update, persistState, stateRepository, userRepository);
             }
+            default -> {
+                return null;
+            }
         }
-        return null;
     }
 }
