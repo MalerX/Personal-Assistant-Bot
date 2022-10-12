@@ -31,15 +31,10 @@ public class AssistantBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            log.debug("onUpdateReceived() -> receive requests from: {}", update.getMessage().getFrom());
-            try {
-                requests.put(update);
-            } catch (InterruptedException e) {
-                log.info("onUpdateReceived() -> adding interrupted", e);
-            }
-        } else {
-            log.debug("onUpdateReceived() -> object Update not contain message or text");
+        try {
+            requests.put(update);
+        } catch (InterruptedException e) {
+            log.info("onUpdateReceived() -> adding interrupted", e);
         }
     }
 

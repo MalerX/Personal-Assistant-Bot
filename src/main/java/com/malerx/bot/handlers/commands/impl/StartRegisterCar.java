@@ -1,6 +1,6 @@
 package com.malerx.bot.handlers.commands.impl;
 
-import com.malerx.bot.data.entity.State;
+import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
 import com.malerx.bot.data.repository.StateRepository;
@@ -51,8 +51,8 @@ public class StartRegisterCar implements CommandHandler {
                 });
     }
 
-    private State createState(final Update update) {
-        return new State()
+    private PersistState createState(final Update update) {
+        return new PersistState()
                 .setChatId(update.getMessage().getChatId())
                 .setDescription("Регистрация автомобиля в системе бота")
                 .setStateMachine(CarRegistration.class.getSimpleName())

@@ -18,7 +18,7 @@ import java.util.Date;
 @Setter
 @Accessors(chain = true)
 @ToString
-public class State {
+public class PersistState {
     @Id
     @GeneratedValue
     private Long id;

@@ -1,7 +1,7 @@
 package com.malerx.bot.handlers.state.impl;
 
 import com.malerx.bot.data.entity.Car;
-import com.malerx.bot.data.entity.State;
+import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.entity.TGUser;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
@@ -78,7 +78,7 @@ public class CarRegistration implements StateHandler {
                                     return Optional.of(createAnswer(message, checkInputMsg));
                                 });
                     }
-                    log.error("one() -> not found user with idop.state()");
+                    log.error("one() -> not found user with idop.persistState()");
                     var s = op.state()
                             .setStage(Stage.ERROR)
                             .setMessage(createMsg(message,
@@ -130,7 +130,7 @@ public class CarRegistration implements StateHandler {
 
     private CompletableFuture<Optional<Object>> two(Operation op) {
         var command = op.update().getMessage().getText();
-        final State s;
+        final PersistState s;
         if (Objects.equals(YES, command)) {
             s = op.state()
                     .setStage(Stage.DONE)
@@ -160,8 +160,8 @@ public class CarRegistration implements StateHandler {
         return message;
     }
 
-    private CompletableFuture<State> updateState(State s) {
-        log.debug("updateState() -> update state {}", s);
+    private CompletableFuture<PersistState> updateState(PersistState s) {
+        log.debug("updateState() -> update persistState {}", s);
         return stateRepository.update(s);
     }
 }

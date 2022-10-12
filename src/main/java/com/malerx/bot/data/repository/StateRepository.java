@@ -1,6 +1,6 @@
 package com.malerx.bot.data.repository;
 
-import com.malerx.bot.data.entity.State;
+import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
 import io.micronaut.data.annotation.Query;
 import io.micronaut.data.annotation.Repository;
@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 @Repository
-public interface StateRepository extends AsyncCrudRepository<State, Long> {
-    @Query("FROM State s WHERE s.chatId = :id AND s.stage = :stage ORDER BY s.process")
-    CompletableFuture<Collection<State>> findActiveProcess(Long id, Stage stage);
+public interface StateRepository extends AsyncCrudRepository<PersistState, Long> {
+    @Query("FROM PersistState s WHERE s.chatId = :id AND s.stage = :stage ORDER BY s.process")
+    CompletableFuture<Collection<PersistState>> findActiveProcess(Long id, Stage stage);
 }

@@ -1,10 +1,10 @@
 package com.malerx.bot.handlers;
 
-import com.malerx.bot.data.entity.State;
+import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.repository.StateRepository;
+import com.malerx.bot.factory.stm.StateFactory;
 import com.malerx.bot.handlers.commands.CommandHandler;
-import com.malerx.bot.handlers.state.StateHandler;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -23,34 +23,58 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HandlerManager {
     private final Collection<CommandHandler> commands;
-    private final Map<String, StateHandler> stateMachines;
-
+    private final Map<String, StateFactory> stateFactories;
     private final StateRepository stateRepository;
 
     public HandlerManager(Collection<CommandHandler> commands,
-                          Collection<StateHandler> states,
+                          Collection<StateFactory> stateFactories,
                           StateRepository stateRepository) {
         this.commands = commands;
-        this.stateMachines = states.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(m -> m.getClass().getSimpleName(), m -> m));
         this.stateRepository = stateRepository;
+        this.stateFactories = stateFactories.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(
+                        (k) -> k.getClass().getSimpleName(),
+                        (v) -> v)
+                );
     }
 
     public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
-        log.debug("handle() -> find started process for {}", update.getMessage().getChatId());
-        return stateRepository.findActiveProcess(update.getMessage().getChatId(), Stage.PROCEED)
-                .thenCompose(states -> {
-                    if (CollectionUtils.isNotEmpty(states)) {
-                        if (states.size() > 1)
-                            log.warn("handle() -> found more than one states for tg: {}", update.getMessage().getChatId());
-                        var state = states.iterator().next();
-                        return stateHandling(
-                                new Operation(update, state));
-                    }
-                    log.debug("handle() -> not found started state");
-                    return commandHandling(update);
-                });
+        var message = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() :
+                (update.hasMessage() ? update.getMessage() : null);
+        if (Objects.nonNull(message)) {
+            return stateRepository.findActiveProcess(message.getChatId(), Stage.PROCEED)
+                    .thenCompose(states -> {
+                        if (CollectionUtils.isNotEmpty(states)) {
+                            var state = states.iterator().next();
+                            return stateHandling(state, update);
+                        }
+                        return commandHandling(update);
+                    });
+        }
+        return CompletableFuture.completedFuture(Optional.empty());
+    }
+
+    private CompletableFuture<Optional<Object>> stateHandling(PersistState state, Update update) {
+        var factory = stateFactories.get(state.getStateMachine());
+        if (Objects.nonNull(factory)) {
+            var stateMachine = factory.createState(state, update);
+            return stateMachine.nextStep();
+        }
+        return sendError(state);
+    }
+
+    private CompletableFuture<Optional<Object>> sendError(PersistState s) {
+        s.setStage(Stage.ERROR);
+        s.setDescription(
+                String.format("Не найдена реализованная машина состояний для %s", s.getStateMachine())
+        );
+        return stateRepository.update(s)
+                .thenApply(r -> Optional.of(
+                        new SendMessage(
+                                r.getChatId().toString(),
+                                r.getDescription())
+                ));
     }
 
     private CompletableFuture<Optional<Object>> commandHandling(@NonNull Update update) {
@@ -70,13 +94,5 @@ public class HandlerManager {
                         \t\t\t*/help*""");
         msg.enableMarkdown(Boolean.TRUE);
         return CompletableFuture.completedFuture(Optional.of(msg));
-    }
-
-    private CompletableFuture<Optional<Object>> stateHandling(@NonNull final Operation operation) {
-        log.debug("stateHandling() -> found state for {}, \nupdate: {}",
-                operation.state(), operation.update().getMessage());
-        StateHandler handler = stateMachines.get(operation.state().getStateMachine());
-        log.debug("stateHandling() -> get machine {}", handler.getClass().getSimpleName());
-        return handler.proceed(operation);
     }
 }

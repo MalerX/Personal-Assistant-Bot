@@ -2,7 +2,7 @@ package com.malerx.bot.data;
 
 import com.malerx.bot.data.entity.Address;
 import com.malerx.bot.data.entity.Car;
-import com.malerx.bot.data.entity.State;
+import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.entity.Tenant;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.repository.StateRepository;
@@ -30,16 +30,16 @@ public class RepoTest {
 
     @Test
     public void stateRepoTest() throws NoSuchAlgorithmException {
-        State state = new State();
-        state.setChatId(SecureRandom.getInstanceStrong().nextLong())
+        PersistState persistState = new PersistState();
+        persistState.setChatId(SecureRandom.getInstanceStrong().nextLong())
                 .setStage(Stage.PROCEED)
                 .setStateMachine("StateMachine")
                 .setMessage("Hello");
 
-        stateRepository.save(state).join();
+        stateRepository.save(persistState).join();
 
-        Collection<State> created = stateRepository.findActiveProcess(state.getId(), Stage.PROCEED).join();
-        assertEquals(state.getStage(), created.iterator().next().getStage());
+        Collection<PersistState> created = stateRepository.findActiveProcess(persistState.getId(), Stage.PROCEED).join();
+        assertEquals(persistState.getStage(), created.iterator().next().getStage());
     }
 
     @Test
