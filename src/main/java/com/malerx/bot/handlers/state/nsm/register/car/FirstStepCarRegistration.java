@@ -5,6 +5,7 @@ import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.entity.TGUser;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
+import com.malerx.bot.data.repository.CarRepository;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.state.nsm.State;
@@ -29,15 +30,18 @@ public class FirstStepCarRegistration implements State {
 
     private final TGUserRepository userRepository;
     private final StateRepository stateRepository;
+    private final CarRepository carRepository;
 
     public FirstStepCarRegistration(Update update,
                                     PersistState state,
                                     TGUserRepository userRepository,
-                                    StateRepository stateRepository) {
+                                    StateRepository stateRepository,
+                                    CarRepository carRepository) {
         this.message = update.getMessage();
         this.userRepository = userRepository;
         this.stateRepository = stateRepository;
         this.state = state;
+        this.carRepository = carRepository;
     }
 
     @Override
@@ -46,10 +50,10 @@ public class FirstStepCarRegistration implements State {
         return findUser(message.getChatId())
                 .thenCompose(user -> {
                     if (Objects.nonNull(user)) {
-                        var carOpt = createCar();
-                        return carOpt
-                                .map(car -> addCar(user, car))
-                                .orElseGet(this::wrongFormat);
+                        return createCar()
+                                .thenCompose(c -> c.
+                                        map(car -> addCar(user, car))
+                                        .orElseGet(this::wrongFormat));
                     }
                     return userNotFound();
                 });
@@ -60,17 +64,20 @@ public class FirstStepCarRegistration implements State {
         return userRepository.findById(id);
     }
 
-    private Optional<Car> createCar() {
+    private CompletableFuture<Optional<Car>> createCar() {
         String[] carIfo = message.getText().split("\n");
         if (carIfo.length != 3) {
             log.error("createCar() -> wrong auto data format");
-            return Optional.empty();
+            return CompletableFuture.completedFuture(Optional.empty());
         }
         log.debug("createCar() -> crete car from {}", Arrays.toString(carIfo));
-        return Optional.of(new Car()
+
+        var car = new Car()
                 .setModel(carIfo[0])
                 .setColor(carIfo[1])
-                .setRegNumber(carIfo[2]));
+                .setRegNumber(carIfo[2]);
+        return carRepository.save(car)
+                .thenApply(Optional::of);
     }
 
     private CompletableFuture<Optional<Object>> addCar(TGUser user, Car car) {
@@ -80,23 +87,24 @@ public class FirstStepCarRegistration implements State {
         tenant.setCars(cars);
         state.setStep(Step.TWO)
                 .setDescription("Подтверждение ввода");
-        return stateRepository.update(state)
-                .thenApply(r -> {
-                    var msg = new SendMessage(message.getChatId().toString(), """
-                            Всё верно?%s""".formatted(car.toString()));
-                    msg.setReplyMarkup(createKeyboard());
-                    return Optional.of(msg);
-                });
+        return userRepository.update(user)
+                .thenCompose(u -> stateRepository.update(state)
+                        .thenApply(r -> {
+                            var msg = new SendMessage(message.getChatId().toString(), """
+                                    Всё верно?%s""".formatted(car.toString()));
+                            msg.setReplyMarkup(createKeyboard(car.getId()));
+                            return Optional.of(msg);
+                        }));
     }
 
-    private ReplyKeyboard createKeyboard() {
+    private ReplyKeyboard createKeyboard(Long carId) {
         var approve = InlineKeyboardButton.builder()
                 .text("Да")
                 .callbackData(YES)
                 .build();
         var decline = InlineKeyboardButton.builder()
                 .text("Нет")
-                .callbackData(NO)
+                .callbackData(carId.toString())
                 .build();
         return InlineKeyboardMarkup.builder()
                 .keyboardRow(List.of(approve, decline))
