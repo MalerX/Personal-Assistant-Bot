@@ -123,7 +123,7 @@ public class FirstStepCarRegistration implements State {
 
     private CompletableFuture<Optional<OutgoingMessage>> userNotFound() {
         state.setStage(Stage.ERROR)
-                .setMessage("""
+                .setDescription("""
                         Пользователь %d не зарегистрирован"""
                         .formatted(message.getChatId()));
         return stateRepository.update(state)

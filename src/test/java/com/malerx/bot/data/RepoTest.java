@@ -33,8 +33,7 @@ public class RepoTest {
         PersistState persistState = new PersistState();
         persistState.setChatId(SecureRandom.getInstanceStrong().nextLong())
                 .setStage(Stage.PROCEED)
-                .setStateMachine("StateMachine")
-                .setMessage("Hello");
+                .setStateMachine("StateMachine");
 
         stateRepository.save(persistState).join();
 
