@@ -3,6 +3,7 @@ package com.malerx.bot.data.model;
 import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * Базовый класс сообщения ответа.
@@ -15,5 +16,5 @@ abstract public class OutgoingMessage {
         this.destination = destination;
     }
 
-    abstract public Collection<Object> send();
+    abstract public Stream<Object> send();
 }

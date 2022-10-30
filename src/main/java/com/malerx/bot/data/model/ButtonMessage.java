@@ -3,9 +3,9 @@ package com.malerx.bot.data.model;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 
-import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ButtonMessage extends TextMessage {
     private final ReplyKeyboard keyboard;
@@ -18,11 +18,11 @@ public class ButtonMessage extends TextMessage {
     }
 
     @Override
-    public Collection<Object> send() {
-        return super.send().stream()
+    public Stream<Object> send() {
+        return super.send()
                 .peek(m -> {
                     if (m instanceof SendMessage sm)
                         sm.setReplyMarkup(keyboard);
-                }).collect(Collectors.toSet());
+                });
     }
 }

@@ -45,12 +45,13 @@ public class ProcessMessage {
     }
 
     private void send(OutgoingMessage m) {
-        m.send().forEach(o -> {
+        long count = m.send().peek(o -> {
             try {
                 responses.put(o);
             } catch (InterruptedException e) {
                 log.error("processing() -> interrupt add response to queue");
             }
-        });
+        }).count();
+        log.debug("send() -> send {} messages", count);
     }
 }
