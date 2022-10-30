@@ -53,18 +53,13 @@ public class IpHandler implements CommandHandler {
     private CompletableFuture<Boolean> isAuthorized(Long chatId) {
         log.debug("isAuthorized() -> check role user {}", chatId);
         return userRepository.existsById(chatId)
-                .thenCompose(exist -> {
+                .thenApply(exist -> {
                     if (exist) {
                         return userRepository.findById(chatId)
-                                .thenApply(u -> {
-                                    if (Objects.equals(u.getRole(), Role.ADMIN))
-                                        return Boolean.TRUE;
-                                    log.warn("isAuthorized() -> user {} is not admin", u.getId());
-                                    return Boolean.FALSE;
-                                });
+                                .thenApply(u -> Objects.equals(u.getRole(), Role.ADMIN)).join();
                     } else
                         log.debug("isAuthorized() -> user {} is not registered", chatId);
-                    return CompletableFuture.completedFuture(Boolean.FALSE);
+                    return Boolean.FALSE;
                 });
     }
 

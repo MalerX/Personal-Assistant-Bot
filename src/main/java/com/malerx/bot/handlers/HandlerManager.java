@@ -47,6 +47,7 @@ public class HandlerManager {
                     .thenCompose(states -> {
                         if (CollectionUtils.isNotEmpty(states)) {
                             var state = states.iterator().next();
+                            log.debug("handle() -> found state: {}", state);
                             return stateHandling(state, update);
                         }
                         return commandHandling(update);
@@ -91,7 +92,7 @@ public class HandlerManager {
                         У вас нет начатых/незавершённых процессов.
                         Чтобы ознакомиться c доступными услугами введите
                                                
-                        \t\t\t*/help*""");
+                        */help*""");
         msg.enableMarkdown(Boolean.TRUE);
         return CompletableFuture.completedFuture(Optional.of(msg));
     }
