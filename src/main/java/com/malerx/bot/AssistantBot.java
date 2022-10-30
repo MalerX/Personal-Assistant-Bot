@@ -16,17 +16,20 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class AssistantBot extends TelegramLongPollingBot {
-    @Value(value = "${telegram.token}")
-    private String token;
-    @Value(value = "${telegram.username}")
-    private String username;
+    private final String token;
+    private final String username;
 
     private final ArrayBlockingQueue<Update> requests;
     private final ArrayBlockingQueue<Object> responses;
 
-    public AssistantBot(BeanFactory beanFactory) {
+    public AssistantBot(BeanFactory beanFactory,
+                        @Value(value = "${telegram.token}") String token,
+                        @Value(value = "${telegram.username}") String username
+    ) {
         this.requests = beanFactory.getRequests();
         this.responses = beanFactory.getResponses();
+        this.token = token;
+        this.username = username;
     }
 
     @Override
