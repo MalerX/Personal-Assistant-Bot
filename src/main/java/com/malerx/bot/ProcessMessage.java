@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @Context
 @Slf4j
@@ -45,13 +46,12 @@ public class ProcessMessage {
     }
 
     private void send(OutgoingMessage m) {
-        long count = m.send().peek(o -> {
+        m.send().forEach(o -> {
             try {
                 responses.put(o);
             } catch (InterruptedException e) {
                 log.error("processing() -> interrupt add response to queue");
             }
-        }).count();
-        log.debug("send() -> send {} messages", count);
+        });
     }
 }
