@@ -5,6 +5,7 @@ import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
 import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.CarRepository;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.handlers.state.nsm.State;
@@ -16,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -52,21 +54,21 @@ public class SecondStepCarRegistration implements State {
             return rEdit();
     }
 
-    private CompletableFuture<Optional<Object>> ok() {
+    private CompletableFuture<Optional<OutgoingMessage>> ok() {
         state.setStage(Stage.DONE)
                 .setDescription("Ввод корректный. Автомобиль добавлен");
         return stateRepository.update(state)
-                .thenApply(r -> Optional.of(new SendMessage(message.getChatId().toString(), r.getDescription())));
+                .thenApply(r -> Optional.of(new TextMessage(Set.of(message.getChatId()), r.getDescription())));
     }
 
-    private CompletableFuture<Optional<Object>> rEdit() {
+    private CompletableFuture<Optional<OutgoingMessage>> rEdit() {
         var carId = Long.parseLong(callbackQuery.getData());
         return carRepository.findById(carId)
                 .thenCompose(car -> disableCar(car)
                         .thenCombine(updateState(), (v, s) -> s));
     }
 
-    private CompletableFuture<Optional<Object>> updateState() {
+    private CompletableFuture<Optional<OutgoingMessage>> updateState() {
         state.setStep(Step.ONE)
                 .setDescription("""
                         Введите информацию об автомобиле в следующем формате:
@@ -75,11 +77,7 @@ public class SecondStepCarRegistration implements State {
                         номер гос регистрации*
                         """);
         return stateRepository.update(state)
-                .thenApply(r -> {
-                    var msg = new SendMessage(message.getChatId().toString(), r.getDescription());
-                    msg.enableMarkdown(Boolean.TRUE);
-                    return Optional.of(msg);
-                });
+                .thenApply(r -> Optional.of(new TextMessage(Set.of(message.getChatId()), r.getDescription())));
     }
 
     private CompletableFuture<Void> disableCar(Car c) {
