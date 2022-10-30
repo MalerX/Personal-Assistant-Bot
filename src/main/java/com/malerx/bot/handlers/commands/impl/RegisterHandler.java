@@ -3,17 +3,19 @@ package com.malerx.bot.handlers.commands.impl;
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.factory.stm.RegisterStateFactory;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -31,7 +33,7 @@ public class RegisterHandler implements CommandHandler {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
+    public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
         var chatId = update.getMessage().getChatId();
         return userRepository.existsById(chatId)
                 .thenCompose(exist -> {
@@ -48,28 +50,21 @@ public class RegisterHandler implements CommandHandler {
                 });
     }
 
-    CompletableFuture<Optional<Object>> startRegistration(Update u) {
+    CompletableFuture<Optional<OutgoingMessage>> startRegistration(Update u) {
         PersistState persistState = new PersistState()
                 .setChatId(u.getMessage().getChatId())
                 .setStateMachine(RegisterStateFactory.class.getSimpleName())
                 .setStep(Step.ONE)
                 .setStage(Stage.PROCEED)
                 .setDescription("""
-                        Регистрация пользователя в системе бота""")
-                .setMessage(createMsg(u,
-                        """
-                                Введите ваши имя и фамилию:"""));
+                        Регистрация пользователя в системе бота""");
         return stateRepository.save(persistState)
-                .thenApply(s -> Optional.of(s.getMessage()));
+                .thenApply(s -> Optional.of(createMsg(u, "Введите ваши имя и фамилию:")));
 
     }
 
-    private Object createMsg(Update update, String s) {
-        var msg = new SendMessage(
-                update.getMessage().getChatId().toString(),
-                s);
-        msg.enableMarkdown(Boolean.TRUE);
-        return msg;
+    private OutgoingMessage createMsg(Update update, String s) {
+        return new TextMessage(Set.of(update.getMessage().getChatId()), s);
     }
 
     @Override

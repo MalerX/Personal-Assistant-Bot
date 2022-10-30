@@ -1,6 +1,8 @@
 package com.malerx.bot.handlers.commands.impl;
 
 import com.malerx.bot.data.enums.Role;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import io.micronaut.context.annotation.Value;
@@ -16,6 +18,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -35,7 +38,7 @@ public class IpHandler implements CommandHandler {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> handle(Update update) {
+    public CompletableFuture<Optional<OutgoingMessage>> handle(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
             var chatId = update.getMessage().getChatId();
             return isAuthorized(chatId)
@@ -68,7 +71,7 @@ public class IpHandler implements CommandHandler {
                 });
     }
 
-    private CompletableFuture<Optional<Object>> requestIp(Long chatId) {
+    private CompletableFuture<Optional<OutgoingMessage>> requestIp(Long chatId) {
         log.debug("requestIp() -> request hot ip");
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
@@ -85,8 +88,8 @@ public class IpHandler implements CommandHandler {
                 });
     }
 
-    private Optional<Object> createMsg(Long chatId, String txt) {
-        return Optional.of(new SendMessage(chatId.toString(), txt));
+    private Optional<OutgoingMessage> createMsg(Long chatId, String txt) {
+        return Optional.of(new TextMessage(Set.of(chatId), txt));
     }
 
     @Override

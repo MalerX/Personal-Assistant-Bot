@@ -1,5 +1,6 @@
 package com.malerx.bot.handlers.commands;
 
+import com.malerx.bot.data.model.OutgoingMessage;
 import io.micronaut.core.annotation.NonNull;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -16,7 +17,7 @@ public interface CommandHandler {
      * @param update Объект события.
      * @return Ответ, созданный по результатам обработки события
      */
-    CompletableFuture<Optional<Object>> handle(@NonNull Update update);
+    CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update);
 
     Boolean support(@NonNull Update update);
 }

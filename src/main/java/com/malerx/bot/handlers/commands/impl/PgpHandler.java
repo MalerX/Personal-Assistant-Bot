@@ -2,6 +2,9 @@ package com.malerx.bot.handlers.commands.impl;
 
 import com.malerx.bot.data.entity.GpgRecord;
 import com.malerx.bot.data.enums.Role;
+import com.malerx.bot.data.model.AttachmentMessage;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import io.micronaut.core.annotation.NonNull;
@@ -15,6 +18,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import javax.inject.Singleton;
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -30,7 +34,7 @@ public class PgpHandler implements CommandHandler {
 
     @SneakyThrows
     @Override
-    public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
+    public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
         if (update.hasMessage()) {
             log.debug("handle() -> incoming request owner token from {}", update.getMessage().getChatId());
             return tgUserRepository.findByRole(Role.ADMIN)
@@ -45,17 +49,17 @@ public class PgpHandler implements CommandHandler {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    private Object createDocument(Update update, String keys) {
-        return new SendDocument(
-                update.getMessage().getChatId().toString(),
+    private OutgoingMessage createDocument(Update update, String keys) {
+        return new AttachmentMessage(
+                Set.of(update.getMessage().getChatId()),
                 new InputFile(new ByteArrayInputStream(
                         keys.getBytes()),
                         "keys.txt"));
     }
 
-    private Optional<Object> createMessage(Update update) {
-        return Optional.of(new SendMessage(
-                update.getMessage().getChatId().toString(),
+    private Optional<OutgoingMessage> createMessage(Update update) {
+        return Optional.of(new TextMessage(
+                Set.of(update.getMessage().getChatId()),
                 """
                         В локальной базе данных не найдены записи PGP ключей \
                         администраторов системы.

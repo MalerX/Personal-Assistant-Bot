@@ -4,6 +4,7 @@ import com.malerx.bot.data.entity.Car;
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
+import com.malerx.bot.data.model.OutgoingMessage;
 import com.malerx.bot.data.repository.CarRepository;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.handlers.state.nsm.State;
@@ -44,7 +45,7 @@ public class SecondStepCarRegistration implements State {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> nextStep() {
+    public CompletableFuture<Optional<OutgoingMessage>> nextStep() {
         if (Objects.equals(YES, callbackQuery.getData()))
             return ok();
         else

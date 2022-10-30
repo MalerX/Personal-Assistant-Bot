@@ -1,5 +1,7 @@
 package com.malerx.bot.handlers.commands.impl;
 
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -16,10 +19,10 @@ public class HelpHandler implements CommandHandler {
     private static final String COMMAND = "/help";
 
     @Override
-    public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
+    public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
         return CompletableFuture.supplyAsync(() -> {
-            var m = new SendMessage(
-                    update.getMessage().getChatId().toString(),
+            var m = new TextMessage(
+                    Set.of(update.getMessage().getChatId()),
                     """
                             *register* - Регистрация пользователя в системе. Требуются *имя фамилия* и *адрес*. \
                             В БД заводится сущность TGUser.\040
@@ -27,7 +30,6 @@ public class HelpHandler implements CommandHandler {
                             *info* - Информация в системе
                             *help* - Помощь по командам бота"""
             );
-            m.enableMarkdown(Boolean.TRUE);
             return Optional.of(m);
         });
     }

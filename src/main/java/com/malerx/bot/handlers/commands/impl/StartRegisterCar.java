@@ -3,18 +3,19 @@ package com.malerx.bot.handlers.commands.impl;
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.factory.stm.RegisterCarStateFactory;
 import com.malerx.bot.handlers.commands.CommandHandler;
-import com.malerx.bot.handlers.state.impl.CarRegistration;
 import io.micronaut.core.annotation.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -31,7 +32,7 @@ public class StartRegisterCar implements CommandHandler {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> handle(@NonNull final Update update) {
+    public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull final Update update) {
         log.debug("handle() -> init process registration car for user {}", update.getMessage().getChatId());
         return userRepository.existsById(update.getMessage().getChatId())
                 .thenCompose(exist -> {
@@ -61,13 +62,8 @@ public class StartRegisterCar implements CommandHandler {
                 .setStep(Step.ONE);
     }
 
-    private SendMessage createMsg(final Update update, String text) {
-
-        var message = new SendMessage(
-                update.getMessage().getChatId().toString(),
-                text);
-        message.enableMarkdown(Boolean.TRUE);
-        return message;
+    private OutgoingMessage createMsg(final Update update, String text) {
+        return new TextMessage(Set.of(update.getMessage().getChatId()), text);
     }
 
     @Override

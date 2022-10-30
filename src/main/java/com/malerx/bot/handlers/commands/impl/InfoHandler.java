@@ -1,6 +1,8 @@
 package com.malerx.bot.handlers.commands.impl;
 
 import com.malerx.bot.data.entity.TGUser;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +10,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.inject.Singleton;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -23,24 +25,23 @@ public class InfoHandler implements CommandHandler {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> handle(Update update) {
+    public CompletableFuture<Optional<OutgoingMessage>> handle(Update update) {
         log.debug("handle() -> request info by user {}", update.getMessage().getChatId());
         if (update.hasMessage() && update.getMessage().hasText()) {
             var chatId = update.getMessage().getChatId();
             return userRepository.existsById(chatId)
-                    .thenCompose(exist -> {
+                    .thenApply(exist -> {
                         if (exist) {
                             return userRepository.findById(chatId)
                                     .thenApply(user -> {
                                         log.debug("handle() -> found user {}", user.getId());
                                         var info = prepareInfo(user);
                                         return createMsg(update, info);
-                                    });
+                                    }).join();
                         }
-                        return CompletableFuture.completedFuture(
-                                createMsg(update, """
-                                        Вы не прошли регистрацию в системе бота. Зарегистрируйтесь по команде
-                                        \t\t\t*/register*"""));
+                        return createMsg(update, """
+                                Вы не прошли регистрацию в системе бота. Зарегистрируйтесь по команде
+                                \t\t\t*/register*""");
                     });
         }
         return CompletableFuture.completedFuture(Optional.empty());
@@ -61,13 +62,8 @@ public class InfoHandler implements CommandHandler {
 
     }
 
-    private Optional<Object> createMsg(final Update u, String s) {
-        var msg = new SendMessage(
-                u.getMessage().getChatId().toString(),
-                s
-        );
-        msg.enableMarkdown(Boolean.TRUE);
-        return Optional.of(msg);
+    private Optional<OutgoingMessage> createMsg(final Update u, String s) {
+        return Optional.of(new TextMessage(Set.of(u.getMessage().getChatId()), s));
     }
 
     @Override

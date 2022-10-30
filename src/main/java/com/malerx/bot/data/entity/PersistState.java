@@ -2,6 +2,7 @@ package com.malerx.bot.data.entity;
 
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
+import com.malerx.bot.data.model.OutgoingMessage;
 import io.micronaut.data.annotation.DateCreated;
 import io.micronaut.data.annotation.DateUpdated;
 import lombok.Getter;
@@ -31,18 +32,4 @@ public class PersistState {
     private Date start;
     @DateUpdated
     private Date process;
-    @Transient
-    private Object message;
-
-    public Object toMessage() {
-        if (message instanceof String) {
-            var m = new SendMessage(
-                    this.chatId.toString(),
-                    this.message.toString()
-            );
-            m.enableMarkdown(Boolean.TRUE);
-            return m;
-        }
-        return this.message;
-    }
 }

@@ -2,6 +2,8 @@ package com.malerx.bot.handlers;
 
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.factory.stm.StateFactory;
 import com.malerx.bot.handlers.commands.CommandHandler;
@@ -12,10 +14,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.inject.Singleton;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -39,7 +38,7 @@ public class HandlerManager {
                 );
     }
 
-    public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
+    public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
         var message = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() :
                 (update.hasMessage() ? update.getMessage() : null);
         if (Objects.nonNull(message)) {
@@ -55,7 +54,7 @@ public class HandlerManager {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    private CompletableFuture<Optional<Object>> stateHandling(PersistState state, Update update) {
+    private CompletableFuture<Optional<OutgoingMessage>> stateHandling(PersistState state, Update update) {
         var factory = stateFactories.get(state.getStateMachine());
         if (Objects.nonNull(factory)) {
             var stateMachine = factory.createState(state, update);
@@ -64,20 +63,20 @@ public class HandlerManager {
         return sendError(state);
     }
 
-    private CompletableFuture<Optional<Object>> sendError(PersistState s) {
+    private CompletableFuture<Optional<OutgoingMessage>> sendError(PersistState s) {
         s.setStage(Stage.ERROR);
         s.setDescription(
                 String.format("Не найдена реализованная машина состояний для %s", s.getStateMachine())
         );
         return stateRepository.update(s)
                 .thenApply(r -> Optional.of(
-                        new SendMessage(
-                                r.getChatId().toString(),
+                        new TextMessage(
+                                Set.of(r.getChatId()),
                                 r.getDescription())
                 ));
     }
 
-    private CompletableFuture<Optional<Object>> commandHandling(@NonNull Update update) {
+    private CompletableFuture<Optional<OutgoingMessage>> commandHandling(@NonNull Update update) {
         log.debug("commandHandling() -> handle command");
         for (CommandHandler handler :
                 commands) {
@@ -86,13 +85,12 @@ public class HandlerManager {
             }
         }
         log.warn("handle() -> not support handle update {}", update.getMessage());
-        var msg = new SendMessage(update.getMessage().getChatId().toString(),
+        var msg = new TextMessage(Set.of(update.getMessage().getChatId()),
                 """
                         У вас нет начатых/незавершённых процессов.
                         Чтобы ознакомиться c доступными услугами введите
                                                
                         \t\t\t*/help*""");
-        msg.enableMarkdown(Boolean.TRUE);
         return CompletableFuture.completedFuture(Optional.of(msg));
     }
 }

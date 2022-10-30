@@ -38,7 +38,6 @@ class Position {
             Map<String, Object> level5 = ((Map<String, Object>) level4.get("GeoObject"));
             Map<String, Object> point = ((Map<String, Object>) level5.get("Point"));
             String[] pos = point.get("pos").toString().split("\\s");
-//            String[] pos = new String[]{"a", "b"};
             log.debug("extract() -> extract pos from body response: {}", Arrays.toString(pos));
             result = Coordinates.builder()
                     .longitude(pos[0])

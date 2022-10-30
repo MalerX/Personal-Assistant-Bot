@@ -5,6 +5,8 @@ import com.malerx.bot.data.entity.TGUser;
 import com.malerx.bot.data.entity.Tenant;
 import com.malerx.bot.data.enums.Role;
 import com.malerx.bot.data.enums.Step;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.state.nsm.State;
@@ -15,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -38,7 +41,7 @@ public class FirstStepRegister implements State {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> nextStep() {
+    public CompletableFuture<Optional<OutgoingMessage>> nextStep() {
         var tgUser = createUser();
         var tenant = createTenant();
         if (tenant.isEmpty()) {
@@ -95,9 +98,7 @@ public class FirstStepRegister implements State {
         }
     }
 
-    private SendMessage createMessage(String text) {
-        var outgoing = new SendMessage(message.getChatId().toString(), text);
-        outgoing.enableMarkdown(Boolean.TRUE);
-        return outgoing;
+    private TextMessage createMessage(String text) {
+        return new TextMessage(Set.of(message.getChatId()), text);
     }
 }

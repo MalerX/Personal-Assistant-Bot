@@ -19,37 +19,35 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @Slf4j
 public class WeatherService {
-    @Value(value = "${api.yandex.weather}")
-    private String weatherToken;
-    @Value(value = "${api.yandex.geo}")
-    private String geoToken;
-    @Value(value = "${api.yandex.urlGeo}")
-    private String urlGeo;
+    private final String weatherToken;
+    private final String geoToken;
+    private final String urlGeo;
 
     private final HttpClient httpClient;
     private final Position position;
     private final Weather weather;
 
-    public WeatherService(HttpClient httpClient, Position position, Weather weather) {
+    public WeatherService(HttpClient httpClient, Position position, Weather weather,
+                          @Value(value = "${api.yandex.weather}") String weatherToken,
+                          @Value(value = "${api.yandex.geo}") String geoToken,
+                          @Value(value = "${api.yandex.urlGeo}") String urlGeo) {
         this.httpClient = httpClient;
         this.position = position;
         this.weather = weather;
+        this.weatherToken = weatherToken;
+        this.geoToken = geoToken;
+        this.urlGeo = urlGeo;
     }
 
-    public CompletableFuture<Optional<Object>> getWeather(@NonNull Update update) {
+    public CompletableFuture<Optional<String>> getWeather(@NonNull Update update) {
         log.debug("handle() -> incoming request weather");
         String[] destination = update.getMessage().getText().split("\\s", 2);
         return getCoordinates(destination[1])
-                .thenCompose(coordinates -> {
-                    if (coordinates.isPresent()) {
-                        return getWeather(coordinates.get())
-                                .thenApply(jsonOptional -> jsonOptional
-                                        .map(jsonWeather -> new SendMessage(
-                                                update.getMessage().getChatId().toString(), jsonWeather
-                                        )));
-                    }
+                .thenApply(coordinates -> {
+                    if (coordinates.isPresent())
+                        return getWeather(coordinates.get()).join();
                     log.error("getCoordinates() -> failed get position for {}", destination[1]);
-                    return CompletableFuture.completedFuture(Optional.empty());
+                    return Optional.empty();
                 });
     }
 

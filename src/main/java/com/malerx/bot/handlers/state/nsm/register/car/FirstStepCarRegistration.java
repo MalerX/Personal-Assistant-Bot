@@ -5,12 +5,14 @@ import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.entity.TGUser;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.enums.Step;
+import com.malerx.bot.data.model.ButtonMessage;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.CarRepository;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.state.nsm.State;
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -45,7 +47,7 @@ public class FirstStepCarRegistration implements State {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> nextStep() {
+    public CompletableFuture<Optional<OutgoingMessage>> nextStep() {
         log.debug("nextStep() -> first step register car");
         return findUser(message.getChatId())
                 .thenCompose(user -> {
@@ -80,7 +82,7 @@ public class FirstStepCarRegistration implements State {
                 .thenApply(Optional::of);
     }
 
-    private CompletableFuture<Optional<Object>> addCar(TGUser user, Car car) {
+    private CompletableFuture<Optional<OutgoingMessage>> addCar(TGUser user, Car car) {
         var tenant = user.getTenant();
         Set<Car> cars = new HashSet<>(user.getTenant().getCars());
         cars.add(car);
@@ -90,9 +92,10 @@ public class FirstStepCarRegistration implements State {
         return userRepository.update(user)
                 .thenCompose(u -> stateRepository.update(state)
                         .thenApply(r -> {
-                            var msg = new SendMessage(message.getChatId().toString(), """
-                                    Всё верно?%s""".formatted(car.toString()));
-                            msg.setReplyMarkup(createKeyboard(car.getId()));
+                            var msg = new ButtonMessage("""
+                                    Всё верно?%s""".formatted(car.toString()),
+                                    Set.of(message.getChatId()),
+                                    createKeyboard(car.getId()));
                             return Optional.of(msg);
                         }));
     }
@@ -111,21 +114,21 @@ public class FirstStepCarRegistration implements State {
                 .build();
     }
 
-    private CompletableFuture<Optional<Object>> wrongFormat() {
+    private CompletableFuture<Optional<OutgoingMessage>> wrongFormat() {
         return CompletableFuture.completedFuture(
-                Optional.of(new SendMessage(message.getChatId().toString(), """
+                Optional.of(new TextMessage(Set.of(message.getChatId()), """
                         Введённые данные не соответствуют ожидаемому формату. Проверьте \
                         вводимые данные""")));
     }
 
-    private CompletableFuture<Optional<Object>> userNotFound() {
+    private CompletableFuture<Optional<OutgoingMessage>> userNotFound() {
         state.setStage(Stage.ERROR)
                 .setMessage("""
                         Пользователь %d не зарегистрирован"""
                         .formatted(message.getChatId()));
         return stateRepository.update(state)
-                .thenApply(r -> Optional.of(new SendMessage(
-                        message.getChatId().toString(),
+                .thenApply(r -> Optional.of(new TextMessage(
+                        Set.of(message.getChatId()),
                         r.getDescription())));
     }
 }

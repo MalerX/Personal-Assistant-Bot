@@ -1,5 +1,6 @@
 package com.malerx.bot;
 
+import com.malerx.bot.data.model.OutgoingMessage;
 import com.malerx.bot.factory.BeanFactory;
 import com.malerx.bot.handlers.HandlerManager;
 import io.micronaut.context.annotation.Context;
@@ -34,7 +35,7 @@ public class ProcessMessage {
                     Update update = requests.take();
                     handlerManager.handle(update)
                             .thenAcceptAsync(response -> {
-                                response.ifPresent(this::define);
+                                response.ifPresent(this::send);
                             });
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
@@ -43,18 +44,13 @@ public class ProcessMessage {
         });
     }
 
-    private void define(Object o) {
-        if (o instanceof Collection<?> os)
-            os.forEach(this::send);
-        else
-            send(o);
-    }
-
-    private void send(Object o) {
-        try {
-            responses.put(o);
-        } catch (InterruptedException e) {
-            log.error("processing() -> interrupt add response to queue");
-        }
+    private void send(OutgoingMessage m) {
+        m.send().forEach(o -> {
+            try {
+                responses.put(o);
+            } catch (InterruptedException e) {
+                log.error("processing() -> interrupt add response to queue");
+            }
+        });
     }
 }

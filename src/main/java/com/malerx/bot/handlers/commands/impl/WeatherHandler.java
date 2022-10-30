@@ -1,5 +1,7 @@
 package com.malerx.bot.handlers.commands.impl;
 
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import com.malerx.bot.services.weather.WeatherService;
 import io.micronaut.core.annotation.NonNull;
@@ -8,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -22,8 +25,9 @@ public class WeatherHandler implements CommandHandler {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> handle(@NonNull Update update) {
-        return weatherService.getWeather(update);
+    public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
+        return weatherService.getWeather(update)
+                .thenApply(json -> json.map(s -> new TextMessage(Set.of(update.getMessage().getChatId()), s)));
     }
 
     @Override

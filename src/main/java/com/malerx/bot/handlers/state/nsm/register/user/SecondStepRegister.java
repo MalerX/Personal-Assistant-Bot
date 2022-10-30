@@ -4,6 +4,8 @@ import com.malerx.bot.data.entity.Address;
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.entity.TGUser;
 import com.malerx.bot.data.enums.Stage;
+import com.malerx.bot.data.model.OutgoingMessage;
+import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.state.nsm.State;
@@ -14,6 +16,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -35,7 +38,7 @@ public class SecondStepRegister implements State {
     }
 
     @Override
-    public CompletableFuture<Optional<Object>> nextStep() {
+    public CompletableFuture<Optional<OutgoingMessage>> nextStep() {
         return userRepository.findById(message.getChatId())
                 .thenCompose(user -> {
                     if (Objects.isNull(user))
@@ -53,7 +56,7 @@ public class SecondStepRegister implements State {
                 });
     }
 
-    private CompletableFuture<Optional<Object>> alreadyRegistered() {
+    private CompletableFuture<Optional<OutgoingMessage>> alreadyRegistered() {
         state.setStage(Stage.ERROR)
                 .setDescription("Не найдет пользователь");
         var msg = createMessage("""
@@ -63,7 +66,7 @@ public class SecondStepRegister implements State {
                 .thenApply(r -> Optional.of(msg));
     }
 
-    private CompletableFuture<Optional<Object>> updateUser(TGUser user, Address address) {
+    private CompletableFuture<Optional<OutgoingMessage>> updateUser(TGUser user, Address address) {
         log.debug("updateTgUser() -> update user {}", user.getId());
         user.getTenant().setAddress(address);
         return userRepository.update(user)
@@ -92,9 +95,7 @@ public class SecondStepRegister implements State {
         }
     }
 
-    private SendMessage createMessage(String text) {
-        var outgoing = new SendMessage(message.getChatId().toString(), text);
-        outgoing.enableMarkdown(Boolean.TRUE);
-        return outgoing;
+    private TextMessage createMessage(String text) {
+        return new TextMessage(Set.of(message.getChatId()), text);
     }
 }
