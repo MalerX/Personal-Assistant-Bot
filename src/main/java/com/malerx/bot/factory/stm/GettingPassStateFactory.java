@@ -32,10 +32,10 @@ public class GettingPassStateFactory implements StateFactory {
         var step = persistState.getStep();
         switch (step) {
             case ONE -> {
-                return new FirstStepGettingPassState(update, persistState, userRepository, stateRepository, carRepository);
+                return new FirstStepGettingPassState(update, persistState, userRepository, stateRepository);
             }
             case TWO -> {
-                return new SecondStepGettingPassState();
+                return new SecondStepGettingPassState(carRepository, update);
             }
             default -> {
                 return null;

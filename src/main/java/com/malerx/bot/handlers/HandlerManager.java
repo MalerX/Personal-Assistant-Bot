@@ -1,15 +1,16 @@
 package com.malerx.bot.handlers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
+import com.malerx.bot.data.model.CallbackData;
 import com.malerx.bot.data.model.OutgoingMessage;
 import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.factory.stm.StateFactory;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import io.micronaut.core.annotation.NonNull;
-import io.micronaut.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -42,24 +43,42 @@ public class HandlerManager {
     }
 
     public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
-        if (update.hasCallbackQuery() && !update.getCallbackQuery().getData().startsWith("/")) {
-
-        } else {
-
-        }
-        var message = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() :
-                (update.hasMessage() ? update.getMessage() : null);
-        if (Objects.nonNull(message)) {
-            return stateRepository.findActiveProcess(message.getChatId(), Stage.PROCEED)
-                    .thenCompose(states -> {
-                        if (CollectionUtils.isNotEmpty(states)) {
-                            var state = states.iterator().next();
+        if (update.hasMessage() && update.getMessage().getText().startsWith("/")
+                || update.hasCallbackQuery() && update.getCallbackQuery().getData().startsWith("/")) {
+            return commandHandling(update);
+        } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().startsWith("{")) {
+            var callback = parseCallbackDate(update);
+            return stateRepository.findById(callback.getStateId())
+                    .thenCompose(state -> {
+                        if (state != null) {
                             return stateHandling(state, update);
                         }
-                        return commandHandling(update);
+                        log.error("handle() -> not found state {}", callback.getStateId());
+                        return CompletableFuture.completedFuture(Optional.empty());
                     });
+        } else {
+            long chatId = update.hasCallbackQuery() ? update.getCallbackQuery().getFrom().getId()
+                    : update.hasMessage() ? update.getMessage().getChatId() : -1L;
+            if (chatId != -1L) {
+                return stateRepository.findActiveProcess(chatId, Stage.PROCEED)
+                        .thenCompose(states -> {
+                            if (states != null) {
+                                return stateHandling(states.stream().findFirst().orElseThrow(), update);
+                            }
+                            log.error("handle() -> not found state for {}", chatId);
+                            return CompletableFuture.completedFuture(Optional.empty());
+                        });
+            }
+            return CompletableFuture.completedFuture(Optional.empty());
         }
-        return CompletableFuture.completedFuture(Optional.empty());
+    }
+
+    private CallbackData parseCallbackDate(final Update update) {
+        try {
+            return mapper.readValue(update.getCallbackQuery().getData(), CallbackData.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private CompletableFuture<Optional<OutgoingMessage>> stateHandling(PersistState state, Update update) {
@@ -91,7 +110,7 @@ public class HandlerManager {
                 return handler.handle(update);
             }
         }
-        log.warn("handle() -> not support handle update {}", update.getMessage());
+        log.warn("commandHandling() -> not support handle update {}", update.getMessage());
         var msg = new TextMessage(Set.of(update.getMessage().getChatId()),
                 """
                         У вас нет начатых/незавершённых процессов.
