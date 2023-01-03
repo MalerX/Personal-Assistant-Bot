@@ -46,7 +46,7 @@ public class SecondStepCarRegistration implements State {
     }
 
     @Override
-    public CompletableFuture<Optional<OutgoingMessage>> nextStep() {
+    public CompletableFuture<Optional<OutgoingMessage>> next() {
         if (Objects.equals(YES, callbackQuery.getData()))
             return ok();
         else

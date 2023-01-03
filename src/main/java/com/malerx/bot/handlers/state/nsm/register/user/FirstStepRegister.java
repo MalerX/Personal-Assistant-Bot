@@ -11,7 +11,6 @@ import com.malerx.bot.data.repository.StateRepository;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.state.nsm.State;
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -41,7 +40,7 @@ public class FirstStepRegister implements State {
     }
 
     @Override
-    public CompletableFuture<Optional<OutgoingMessage>> nextStep() {
+    public CompletableFuture<Optional<OutgoingMessage>> next() {
         var tgUser = createUser();
         var tenant = createTenant();
         if (tenant.isEmpty()) {

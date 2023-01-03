@@ -22,4 +22,9 @@ public class Tenant {
     private Address address;
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Car> cars;
+
+    @Override
+    public String toString() {
+        return this.surname + " " + this.name;
+    }
 }

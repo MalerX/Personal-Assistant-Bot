@@ -19,4 +19,9 @@ public class Address {
     private String street;
     private String build;
     private String apartment;
+
+    @Override
+    public String toString() {
+        return this.build + "/" + this.apartment;
+    }
 }

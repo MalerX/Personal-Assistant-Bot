@@ -1,5 +1,6 @@
 package com.malerx.bot.handlers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.malerx.bot.data.entity.PersistState;
 import com.malerx.bot.data.enums.Stage;
 import com.malerx.bot.data.model.OutgoingMessage;
@@ -10,7 +11,6 @@ import com.malerx.bot.handlers.commands.CommandHandler;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.inject.Singleton;
@@ -24,10 +24,12 @@ public class HandlerManager {
     private final Collection<CommandHandler> commands;
     private final Map<String, StateFactory> stateFactories;
     private final StateRepository stateRepository;
+    private final ObjectMapper mapper;
 
     public HandlerManager(Collection<CommandHandler> commands,
                           Collection<StateFactory> stateFactories,
-                          StateRepository stateRepository) {
+                          StateRepository stateRepository,
+                          ObjectMapper mapper) {
         this.commands = commands;
         this.stateRepository = stateRepository;
         this.stateFactories = stateFactories.stream()
@@ -36,9 +38,15 @@ public class HandlerManager {
                         (k) -> k.getClass().getSimpleName(),
                         (v) -> v)
                 );
+        this.mapper = mapper;
     }
 
     public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
+        if (update.hasCallbackQuery() && !update.getCallbackQuery().getData().startsWith("/")) {
+
+        } else {
+
+        }
         var message = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() :
                 (update.hasMessage() ? update.getMessage() : null);
         if (Objects.nonNull(message)) {
@@ -58,7 +66,7 @@ public class HandlerManager {
         var factory = stateFactories.get(state.getStateMachine());
         if (Objects.nonNull(factory)) {
             var stateMachine = factory.createState(state, update);
-            return stateMachine.nextStep();
+            return stateMachine.next();
         }
         return sendError(state);
     }
@@ -77,7 +85,6 @@ public class HandlerManager {
     }
 
     private CompletableFuture<Optional<OutgoingMessage>> commandHandling(@NonNull Update update) {
-        log.debug("commandHandling() -> handle command");
         for (CommandHandler handler :
                 commands) {
             if (handler.support(update)) {

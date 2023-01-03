@@ -38,7 +38,7 @@ public class SecondStepRegister implements State {
     }
 
     @Override
-    public CompletableFuture<Optional<OutgoingMessage>> nextStep() {
+    public CompletableFuture<Optional<OutgoingMessage>> next() {
         return userRepository.findById(message.getChatId())
                 .thenCompose(user -> {
                     if (Objects.isNull(user))

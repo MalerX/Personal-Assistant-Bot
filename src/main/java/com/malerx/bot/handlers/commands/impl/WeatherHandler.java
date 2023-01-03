@@ -32,6 +32,8 @@ public class WeatherHandler implements CommandHandler {
 
     @Override
     public Boolean support(@NonNull Update update) {
-        return update.getMessage().getText().startsWith(COMMAND);
+        String flag = update.hasCallbackQuery() ? update.getCallbackQuery().getData() :
+                (update.hasMessage() ? update.getMessage().getText() : "");
+        return flag.startsWith(COMMAND);
     }
 }

@@ -34,41 +34,46 @@ public class RegisterHandler implements CommandHandler {
 
     @Override
     public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
-        var chatId = update.getMessage().getChatId();
-        return userRepository.existsById(chatId)
-                .thenCompose(exist -> {
-                    if (exist) {
-                        log.debug("handle() -> user already register");
-                        return CompletableFuture.completedFuture(Optional.of(
-                                createMsg(update,
-                                        """
-                                                Вы уже зарегистрированы в системе бота.""")));
-                    } else {
-                        log.debug("handle() -> handle request of registration");
-                        return startRegistration(update);
-                    }
-                });
+        var message = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() :
+                (update.hasMessage() ? update.getMessage() : null);
+        if (message != null) {
+            return userRepository.existsById(message.getChatId())
+                    .thenCompose(exist -> {
+                        if (exist) {
+                            log.debug("handle() -> user already register");
+                            return CompletableFuture.completedFuture(Optional.of(
+                                    createMsg(message.getChatId(),
+                                            """
+                                                    Вы уже зарегистрированы в системе бота.""")));
+                        } else {
+                            log.debug("handle() -> handle request of registration");
+                            return startRegistration(message.getChatId());
+                        }
+                    });
+        }
+        return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    CompletableFuture<Optional<OutgoingMessage>> startRegistration(Update u) {
+    CompletableFuture<Optional<OutgoingMessage>> startRegistration(long chatId) {
         PersistState persistState = new PersistState()
-                .setChatId(u.getMessage().getChatId())
+                .setChatId(chatId)
                 .setStateMachine(RegisterStateFactory.class.getSimpleName())
                 .setStep(Step.ONE)
                 .setStage(Stage.PROCEED)
-                .setDescription("""
-                        Регистрация пользователя в системе бота""");
+                .setDescription("Регистрация пользователя в системе бота");
         return stateRepository.save(persistState)
-                .thenApply(s -> Optional.of(createMsg(u, "Введите ваши имя и фамилию:")));
+                .thenApply(s -> Optional.of(createMsg(chatId, "Введите ваши имя и фамилию:")));
 
     }
 
-    private OutgoingMessage createMsg(Update update, String s) {
-        return new TextMessage(Set.of(update.getMessage().getChatId()), s);
+    private OutgoingMessage createMsg(long chatId, String s) {
+        return new TextMessage(Set.of(chatId), s);
     }
 
     @Override
     public Boolean support(@NonNull Update update) {
-        return update.getMessage().getText().startsWith(COMMAND);
+        String flag = update.hasCallbackQuery() ? update.getCallbackQuery().getData() :
+                (update.hasMessage() ? update.getMessage().getText() : "");
+        return flag.startsWith(COMMAND);
     }
 }

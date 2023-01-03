@@ -47,8 +47,8 @@ public class FirstStepCarRegistration implements State {
     }
 
     @Override
-    public CompletableFuture<Optional<OutgoingMessage>> nextStep() {
-        log.debug("nextStep() -> first step register car");
+    public CompletableFuture<Optional<OutgoingMessage>> next() {
+        log.debug("next() -> first step register car");
         return findUser(message.getChatId())
                 .thenCompose(user -> {
                     if (Objects.nonNull(user)) {

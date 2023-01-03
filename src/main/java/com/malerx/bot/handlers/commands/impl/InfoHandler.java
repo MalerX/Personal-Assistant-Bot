@@ -1,6 +1,7 @@
 package com.malerx.bot.handlers.commands.impl;
 
 import com.malerx.bot.data.entity.TGUser;
+import com.malerx.bot.data.model.ButtonMessage;
 import com.malerx.bot.data.model.OutgoingMessage;
 import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.TGUserRepository;
@@ -8,6 +9,7 @@ import com.malerx.bot.handlers.commands.CommandHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 
 import javax.inject.Singleton;
 import java.util.Optional;
@@ -26,9 +28,10 @@ public class InfoHandler implements CommandHandler {
 
     @Override
     public CompletableFuture<Optional<OutgoingMessage>> handle(Update update) {
-        log.debug("handle() -> request info by user {}", update.getMessage().getChatId());
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            var chatId = update.getMessage().getChatId();
+        var message = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() : null;
+        if (message != null) {
+            var chatId = message.getChatId();
+            log.debug("handle() -> request info by user {}", chatId);
             return userRepository.existsById(chatId)
                     .thenApply(exist -> {
                         if (exist) {
@@ -36,10 +39,10 @@ public class InfoHandler implements CommandHandler {
                                     .thenApply(user -> {
                                         log.debug("handle() -> found user {}", user.getId());
                                         var info = prepareInfo(user);
-                                        return createMsg(update, info);
+                                        return createMsg(chatId, info);
                                     }).join();
                         }
-                        return createMsg(update, """
+                        return createMsg(chatId, """
                                 Вы не прошли регистрацию в системе бота. Зарегистрируйтесь по команде
                                 \t\t\t*/register*""");
                     });
@@ -62,12 +65,17 @@ public class InfoHandler implements CommandHandler {
 
     }
 
-    private Optional<OutgoingMessage> createMsg(final Update u, String s) {
-        return Optional.of(new TextMessage(Set.of(u.getMessage().getChatId()), s));
+    private Optional<OutgoingMessage> createMsg(long chatId, String s) {
+        var k = ReplyKeyboardRemove.builder()
+                .removeKeyboard(Boolean.TRUE)
+                .build();
+        return Optional.of(new ButtonMessage(s, Set.of(chatId), k));
     }
 
     @Override
     public Boolean support(Update update) {
-        return update.getMessage().getText().startsWith(COMMAND);
+        String flag = update.hasCallbackQuery() ? update.getCallbackQuery().getData() :
+                (update.hasMessage() ? update.getMessage().getText() : "");
+        return flag.startsWith(COMMAND);
     }
 }

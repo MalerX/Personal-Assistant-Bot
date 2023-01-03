@@ -10,6 +10,7 @@ import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.factory.stm.RegisterCarStateFactory;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -33,41 +34,48 @@ public class StartRegisterCar implements CommandHandler {
 
     @Override
     public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull final Update update) {
-        log.debug("handle() -> init process registration car for user {}", update.getMessage().getChatId());
-        return userRepository.existsById(update.getMessage().getChatId())
-                .thenCompose(exist -> {
-                    if (!exist)
-                        return CompletableFuture.completedFuture(
-                                Optional.of(
-                                        createMsg(update, """
-                                                Вы ещё не зарегистрированы. Пройдите регистрацию по команде\
-                                                */registration*""")));
-                    return stateRepository.save(createState(update))
-                            .thenApply(r -> Optional.of(createMsg(update,
-                                    """
-                                            Введите информацию об автомобиле в следующем формате:
-                                            *модель
-                                            цвет
-                                            номер гос регистрации*
-                                            """)));
-                });
+        var chatId = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage().getChatId() :
+                (update.hasMessage() ? update.getMessage().getChatId() : null);
+        if (chatId != null) {
+            log.debug("handle() -> init process registration car for user {}", chatId);
+            return userRepository.existsById(chatId)
+                    .thenCompose(exist -> {
+                        if (!exist)
+                            return CompletableFuture.completedFuture(
+                                    Optional.of(
+                                            createMsg(chatId, """
+                                                    Вы ещё не зарегистрированы. Пройдите регистрацию по команде
+                                                    */registration*""")));
+                        return stateRepository.save(createState(chatId))
+                                .thenApply(r -> Optional.of(createMsg(chatId,
+                                        """
+                                                Введите информацию об автомобиле в следующем формате:
+                                                *модель
+                                                цвет
+                                                номер гос регистрации*
+                                                """)));
+                    });
+        }
+        return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    private PersistState createState(final Update update) {
+    private PersistState createState(long chatId) {
         return new PersistState()
-                .setChatId(update.getMessage().getChatId())
+                .setChatId(chatId)
                 .setDescription("Регистрация автомобиля в системе бота")
                 .setStateMachine(RegisterCarStateFactory.class.getSimpleName())
                 .setStage(Stage.PROCEED)
                 .setStep(Step.ONE);
     }
 
-    private OutgoingMessage createMsg(final Update update, String text) {
-        return new TextMessage(Set.of(update.getMessage().getChatId()), text);
+    private OutgoingMessage createMsg(long chatId, String text) {
+        return new TextMessage(Set.of(chatId), text);
     }
 
     @Override
     public Boolean support(Update update) {
-        return update.getMessage().getText().startsWith(COMMAND);
+        String flag = update.hasCallbackQuery() ? update.getCallbackQuery().getData() :
+                (update.hasMessage() ? update.getMessage().getText() : "");
+        return flag.startsWith(COMMAND);
     }
 }
