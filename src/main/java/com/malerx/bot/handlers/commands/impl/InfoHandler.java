@@ -3,11 +3,9 @@ package com.malerx.bot.handlers.commands.impl;
 import com.malerx.bot.data.entity.TGUser;
 import com.malerx.bot.data.model.ButtonMessage;
 import com.malerx.bot.data.model.OutgoingMessage;
-import com.malerx.bot.data.model.TextMessage;
 import com.malerx.bot.data.repository.TGUserRepository;
 import com.malerx.bot.handlers.commands.CommandHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 
@@ -28,9 +26,8 @@ public class InfoHandler implements CommandHandler {
 
     @Override
     public CompletableFuture<Optional<OutgoingMessage>> handle(Update update) {
-        var message = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() : null;
-        if (message != null) {
-            var chatId = message.getChatId();
+        var chatId = update.getMessage().getChatId();
+        if (chatId != null) {
             log.debug("handle() -> request info by user {}", chatId);
             return userRepository.existsById(chatId)
                     .thenApply(exist -> {
@@ -74,8 +71,6 @@ public class InfoHandler implements CommandHandler {
 
     @Override
     public Boolean support(Update update) {
-        String flag = update.hasCallbackQuery() ? update.getCallbackQuery().getData() :
-                (update.hasMessage() ? update.getMessage().getText() : "");
-        return flag.startsWith(COMMAND);
+        return update.getMessage().getText().startsWith(COMMAND);
     }
 }

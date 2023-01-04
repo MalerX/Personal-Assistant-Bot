@@ -43,34 +43,22 @@ public class HandlerManager {
     }
 
     public CompletableFuture<Optional<OutgoingMessage>> handle(@NonNull Update update) {
-        if (update.hasMessage() && update.getMessage().getText().startsWith("/")
-                || update.hasCallbackQuery() && update.getCallbackQuery().getData().startsWith("/")) {
+        if (update.hasMessage() && update.getMessage().getText().startsWith("/")) {
             return commandHandling(update);
-        } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().startsWith("{")) {
-            var callback = parseCallbackDate(update);
-            return stateRepository.findById(callback.getStateId())
-                    .thenCompose(state -> {
-                        if (state != null) {
-                            return stateHandling(state, update);
-                        }
-                        log.error("handle() -> not found state {}", callback.getStateId());
-                        return CompletableFuture.completedFuture(Optional.empty());
-                    });
         } else {
-            long chatId = update.hasCallbackQuery() ? update.getCallbackQuery().getFrom().getId()
-                    : update.hasMessage() ? update.getMessage().getChatId() : -1L;
-            if (chatId != -1L) {
-                return stateRepository.findActiveProcess(chatId, Stage.PROCEED)
-                        .thenCompose(states -> {
-                            if (states != null) {
-                                return stateHandling(states.stream().findFirst().orElseThrow(), update);
-                            }
-                            log.error("handle() -> not found state for {}", chatId);
-                            return CompletableFuture.completedFuture(Optional.empty());
-                        });
-            }
-            return CompletableFuture.completedFuture(Optional.empty());
+            return findState(update);
         }
+    }
+
+    private CompletableFuture<Optional<OutgoingMessage>> commandHandling(@NonNull Update update) {
+        for (CommandHandler handler :
+                commands) {
+            if (handler.support(update)) {
+                return handler.handle(update);
+            }
+        }
+        log.error("commandHandling() -> not found handler for {} command", update.getMessage().getText());
+        return CompletableFuture.completedFuture(Optional.empty());
     }
 
     private CallbackData parseCallbackDate(final Update update) {
@@ -81,7 +69,34 @@ public class HandlerManager {
         }
     }
 
-    private CompletableFuture<Optional<OutgoingMessage>> stateHandling(PersistState state, Update update) {
+    private CompletableFuture<Optional<OutgoingMessage>> findState(Update update) {
+        if (update.hasCallbackQuery()) {
+            var callback = parseCallbackDate(update);
+            return stateRepository.findById(callback.getStateId())
+                    .thenCompose(state -> {
+                        if (state != null) {
+                            return stateHandling(state, update);
+                        }
+                        log.error("findState() -> not found state {}", callback.getStateId());
+                        return notFoundState(update.getCallbackQuery().getFrom().getId());
+                    });
+        } else {
+            var chatId = update.getMessage().getChatId();
+            return stateRepository.findActiveProcess(chatId, Stage.PROCEED)
+                    .thenCompose(states -> {
+                        if (states != null) {
+                            if (states.size() > 1)
+                                log.warn("findState() -> for user {} found more then 1 state", chatId);
+                            return stateHandling(states.iterator().next(), update);
+                        }
+                        log.error("findState() -> not found state for user {}", chatId);
+                        return notFoundState(chatId);
+                    });
+        }
+    }
+
+    CompletableFuture<Optional<OutgoingMessage>> stateHandling(final PersistState state, final Update update) {
+        log.debug("stateHandling() -> handling state {}", state);
         var factory = stateFactories.get(state.getStateMachine());
         if (Objects.nonNull(factory)) {
             var stateMachine = factory.createState(state, update);
@@ -103,20 +118,16 @@ public class HandlerManager {
                 ));
     }
 
-    private CompletableFuture<Optional<OutgoingMessage>> commandHandling(@NonNull Update update) {
-        for (CommandHandler handler :
-                commands) {
-            if (handler.support(update)) {
-                return handler.handle(update);
-            }
-        }
-        log.warn("commandHandling() -> not support handle update {}", update.getMessage());
-        var msg = new TextMessage(Set.of(update.getMessage().getChatId()),
-                """
-                        У вас нет начатых/незавершённых процессов.
-                        Чтобы ознакомиться c доступными услугами введите
-                                               
-                        \t\t\t*/help*""");
-        return CompletableFuture.completedFuture(Optional.of(msg));
+    private CompletableFuture<Optional<OutgoingMessage>> notFoundState(final Long chatId) {
+        return CompletableFuture.supplyAsync(() -> {
+            log.warn("commandHandling() -> fail handle update from user {}", chatId);
+            var msg = new TextMessage(Set.of(chatId),
+                    """
+                            У вас нет начатых/незавершённых процессов.
+                            Чтобы ознакомиться c доступными услугами введите
+                                                   
+                            \t\t\t*/help*""");
+            return Optional.of(msg);
+        });
     }
 }
